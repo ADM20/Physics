@@ -23,7 +23,6 @@
 #include "Shader.h"
 #include "Mesh.h"
 
-
 // time
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
@@ -63,6 +62,20 @@ int main()
 	// time
 	GLfloat firstFrame = (GLfloat) glfwGetTime();
 	
+
+
+
+	// initialise variables
+	glm::vec3 v = glm::vec3(10.0f, 0.0f, 15.0f);
+	glm::vec3 a = glm::vec3(0.0f);
+
+	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
+	glm::vec3 f = glm::vec3(0.0f);
+	
+
+
+
+
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
@@ -84,7 +97,34 @@ int main()
 		**	SIMULATION
 		*/
 		
+		//compute forces
 
+		a = (g) / 1.0f;
+
+		//update velocity and position
+		v = v + deltaTime * a;
+		
+		//contact with ground plane
+		if (particle1.getPos().y < 0.0f || particle1.getPos().y > 10.0f)
+		{
+
+			v.y *= -1.0f;
+		}
+		if (particle1.getPos().x > 5.0f || particle1.getPos().x < -5.0f)
+		{
+			v.x *= -1.0f;
+		}
+		if (particle1.getPos().z > 5.0f || particle1.getPos().z < -5.0f)
+		{
+			v.z *= -1.0f;
+		}
+		
+		particle1.translate(deltaTime * v);
+
+		for (int j = 0; j <3; j++)
+		{
+			
+		}
 
 		/*
 		**	RENDER 
@@ -97,8 +137,8 @@ int main()
 		app.draw(particle1);	
 
 		// draw demo objects
-		app.draw(cube);
-		app.draw(sphere);
+		//app.draw(cube);
+		//app.draw(sphere);
 
 		app.display();
 	}
