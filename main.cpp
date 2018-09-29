@@ -66,14 +66,14 @@ int main()
 
 
 	// initialise variables
-	glm::vec3 v = glm::vec3(10.0f, 0.0f, 15.0f);
+	glm::vec3 v = glm::vec3(10.0f, 0.0f, 0.0f);
 	glm::vec3 a = glm::vec3(0.0f);
 
 	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
 	glm::vec3 f = glm::vec3(0.0f);
 	
-
-
+	glm::vec3 bBox = glm::vec3(5.0f,10.0f,5.0f);
+	//float damper = 0.9f;
 
 
 	// Game loop
@@ -104,28 +104,27 @@ int main()
 		//update velocity and position
 		v = v + deltaTime * a;
 		
-		//contact with ground plane
-		if (particle1.getPos().y < 0.0f || particle1.getPos().y > 10.0f)
+		//contact with bounding box
+	
+			for (int j = 0; j <3; j++)
 		{
+			if (particle1.getPos().y < 0.0f )
+			{
+				std::cout << j << std::endl;
+				v.y *= -1.0f;
+				
+				
+			}
+			else if (particle1.getPos()[j] > bBox[j] || particle1.getPos()[j] < -5.0f)
+			{
+				std::cout << j << std::endl;
+				v[j] *= -1.0f;
+				
 
-			v.y *= -1.0f;
-		}
-		if (particle1.getPos().x > 5.0f || particle1.getPos().x < -5.0f)
-		{
-			v.x *= -1.0f;
-		}
-		if (particle1.getPos().z > 5.0f || particle1.getPos().z < -5.0f)
-		{
-			v.z *= -1.0f;
-		}
-		
-		particle1.translate(deltaTime * v);
-
-		for (int j = 0; j <3; j++)
-		{
+			}
 			
 		}
-
+		particle1.translate(deltaTime * v);
 		/*
 		**	RENDER 
 		*/		
