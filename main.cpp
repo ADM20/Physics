@@ -22,6 +22,7 @@
 #include "Application.h"
 #include "Shader.h"
 #include "Mesh.h"
+#include "Body.h"
 
 // time
 GLfloat deltaTime = 0.0f;
