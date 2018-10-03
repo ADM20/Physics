@@ -40,11 +40,14 @@ int main()
 	// scale it up x5
 	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
+
+	//my transparent shader
+	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
 	plane.setShader(lambert);
 
 
 	// create particle
-	Mesh particle1 = Mesh::Mesh(Mesh::QUAD);
+	Mesh particle1 = Mesh::Mesh("resources/models/sphere.obj");
 	//scale it down (x.1), translate it up by 2.5 and rotate it by 90 degrees around the x axis
 	particle1.translate(glm::vec3(0.0f, 2.5f, 0.0f));
 	particle1.scale(glm::vec3(.1f, .1f, .1f));
@@ -56,8 +59,9 @@ int main()
 	sphere.translate(glm::vec3(-1.0f, 1.0f, 0.0f));
 	sphere.setShader(lambert);
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
-	cube.translate(glm::vec3(1.0f, .5f, 0.0f));
-	cube.setShader(lambert);
+	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
+	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
+	cube.setShader(transparent);
 
 	// time
 	GLfloat firstFrame = (GLfloat) glfwGetTime();
@@ -66,7 +70,7 @@ int main()
 
 
 	// initialise variables
-	glm::vec3 v = glm::vec3(10.0f, 0.0f, 0.0f);
+	glm::vec3 v = glm::vec3(10.0f, 10.0f, 10.0f);
 	glm::vec3 a = glm::vec3(0.0f);
 
 	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -136,7 +140,7 @@ int main()
 		app.draw(particle1);	
 
 		// draw demo objects
-		//app.draw(cube);
+		app.draw(cube);
 		//app.draw(sphere);
 
 		app.display();
