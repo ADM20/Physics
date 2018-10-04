@@ -1,7 +1,8 @@
 #pragma once
 #include "Body.h"
 
-class Particle : public Body
+class Particle :
+	public Body
 {
 public:
 	Particle();
