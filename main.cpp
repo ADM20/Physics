@@ -26,8 +26,8 @@
 #include "Body.h"
 
 // time
-GLfloat deltaTime = 0.0f;
-GLfloat lastFrame = 0.0f;
+GLfloat t = 0.0f;
+GLfloat dt = 0.001f;
 
 // main function
 int main()
@@ -36,60 +36,63 @@ int main()
 	Application app = Application::Application();
 	app.initRender();
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 20.0f));
-			
+
+
+	//timestep
+	double currentTime = (GLfloat)glfwGetTime();
+	double accumulator = 0.0f;
+	
+
+
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
 	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
-	
+
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
-	
+
+	//multiple particle creator
 
 	std::vector<Particle> particles;
-	int numberOfParticles = 10;
+	int numberOfParticles = 3;
 
 	for (int i = 0; i < numberOfParticles; i++)
 	{
-		//create particle
+		//create particles
 		Particle p = Particle::Particle();
 		particles.push_back(p);
-
+		//std::cout << "made one" << std::endl;
+		particles[i].setMesh(Mesh("resources/models/sphere.obj"));
 		particles[i].scale(glm::vec3(.1f, .1f, .1f));
 		particles[i].getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-
+		particles[i].setPos(glm::vec3(i, 2.5f, 0.0f));
+		//particles[i].translate(glm::vec3(i, 0.0f, 0.0f));
 	}
 
 
-	//// create particle
-	//Mesh particle1 = Mesh::Mesh("resources/models/sphere.obj");
-	////scale it down (x.1), translate it up by 2.5 and rotate it by 90 degrees around the x axis
-	//particle1.translate(glm::vec3(0.0f, 2.5f, 0.0f));
-	//particle1.scale(glm::vec3(.1f, .1f, .1f));
-	//particle1.rotate((GLfloat) M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
-	//particle1.setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-	
-	// create demo objects (a cube and a sphere)
-	/*Mesh sphere = Mesh::Mesh("resources/models/sphere.obj");
-	sphere.translate(glm::vec3(-1.0f, 1.0f, 0.0f));
-	sphere.setShader(lambert);*/
+
+
+	// create particle
+	Mesh particle1 = Mesh::Mesh("resources/models/sphere.obj");
+	//scale it down (x.1), translate it up by 2.5 and rotate it by 90 degrees around the x axis
+	particle1.translate(glm::vec3(0.0f, 2.5f, 0.0f));
+	particle1.scale(glm::vec3(.1f, .1f, .1f));
+	particle1.rotate((GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
+	particle1.setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+
+	//my cube
+
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
 	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	cube.setShader(transparent);
 
-	
 
-	// time
-	GLfloat firstFrame = (GLfloat) glfwGetTime();
-	
-	//fixed timestep
-	double physicsTime = 0.0f;
-	const double dt = 0.01f;
-	double currentTime = (GLfloat)glfwGetTime();
-	double accumulator = 0.0f;
+
+
 
 
 	// initialise variables
@@ -98,84 +101,86 @@ int main()
 
 	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
 	glm::vec3 f = glm::vec3(0.0f);
+
+	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
+	float damper = 1.0f;
+
 	
-	glm::vec3 bBox = glm::vec3(5.0f,10.0f,5.0f);
-	float damper = 0.8f;
-
-
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
-		
-		
-		
+
+
+
 		//timestep
 		double newTime = (GLfloat)glfwGetTime();
 		double frameTime = newTime - currentTime;
-		currentTime = newTime;
 
+		currentTime = newTime;
 		accumulator += frameTime;
 	
 
 		while (accumulator >= dt)
 		{
 			for (int i = 0; i < numberOfParticles; i++)
-			{	
+			{
 				/*
 				**	SIMULATION
 				*/
 
 				//compute forces
 				//a = f/M
-				//a = (g) / 1.0f;
+				a = (g) / 1.0f;
 				particles[i].setAcc(g);
 
 				//update velocity and position
-				v = v + deltaTime * a;
-
+				v = v + dt * a;
+				particles[i].setVel(v);
 				//contact with bounding box
 
-				for (int j = 0; j <3; j++)
+				for (int j = 0; j < 3; j++)
 				{
 					if (particles[i].getPos().y <= 0.0f)
 					{
 						std::cout << j << std::endl;
-						v.y *= (-1.0f * damper);
+						//FIX THIS
+						//particles[i].setVel *= (-1.0f * damper);
 
 
 					}
 					else if (particles[i].getPos()[j] >= bBox[j] || particles[i].getPos()[j] <= -5.0f)
 					{
 						std::cout << j << std::endl;
-						v[j] *= (-1.0f * damper);
+						//AND THIS
+						//particles[i].setVel *= (-1.0f * damper);
 					}
 
 				}
-				particles[i].translate(deltaTime * v);
+				particle1.translate(dt * v);
+				//particles[i].translate(dt * v);
+				
+				accumulator -= dt;
+				t += dt;
+			
 			}
 
-			accumulator -= dt;
-			physicsTime += dt;
-
 		}
+
+		const double alpha = accumulator / dt;
+
 		
-		// Set frame time
-		GLfloat currentFrame = (GLfloat)glfwGetTime() - firstFrame;
-		// the animation can be sped up or slowed down by multiplying currentFrame by a factor.
-		currentFrame *= 1.5f;
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
 
 		/*
 		**	INTERACTION
 		*/
 		// Manage interaction
-		app.doMovement(deltaTime);
+		app.doMovement(dt);
 
-	
+
 		/*
-		**	RENDER 
-		*/		
+		**	RENDER
+		*/
+
 		// clear buffer
 		app.clear();
 		// draw groud plane
@@ -185,7 +190,7 @@ int main()
 		{
 			app.draw(particles[i].getMesh());
 		}
-	
+		app.draw(particle1);
 		// draw demo objects
 		app.draw(cube);
 		//app.draw(sphere);
