@@ -74,7 +74,7 @@ int main()
 	}
 
 
-	// create particle
+	// create particle used as a static measure
 	Mesh particle1 = Mesh::Mesh("resources/models/sphere.obj");
 	//scale it down (x.1), translate it up by 2.5 and rotate it by 90 degrees around the x axis
 	particle1.translate(glm::vec3(0.0f, 2.5f, 0.0f));
@@ -91,13 +91,13 @@ int main()
 
 
 	// initialise variables
-	glm::vec3 v = glm::vec3(10.0f, 10.0f, 0.0f);
-	glm::vec3 a = glm::vec3(0.0f);
+	//glm::vec3 v = glm::vec3(10.0f, 10.0f, 0.0f);
+	//glm::vec3 a = glm::vec3(0.0f);
 
 	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
-	glm::vec3 f = glm::vec3(0.0f);
+	//glm::vec3 f = glm::vec3(0.0f);
 
-	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
+	//glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
 	float damper = 1.0f;
 	
 	
@@ -124,17 +124,13 @@ int main()
 				*/
 
 				//compute forces
-				//a = f/M
-				//a = (g) / 1.0f;
-
 				particles[i].setAcc(g);
 
 
 				particles[i].getVel() += particles[i].getAcc() * dt;
 				particles[i].setPos(particles[i].getPos() + particles[i].getVel() * dt);
-				
-				//update velocity and position
-				//v = v + dt * a;
+
+			
 				
 				//contact with bounding box
 
