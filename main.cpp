@@ -68,11 +68,10 @@ int main()
 		particles[i].setMesh(Mesh("resources/models/sphere.obj"));
 		particles[i].scale(glm::vec3(.1f, .1f, .1f));
 		particles[i].getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-		particles[i].setPos(glm::vec3(i, 2.5f, 0.0f));
+		particles[i].setPos(glm::vec3((i), 3.0f,0.0f ));
+		particles[i].setVel(glm::vec3(sin(i), 5.0f, 0.0f));
 		//particles[i].translate(glm::vec3(i, 0.0f, 0.0f));
 	}
-
-
 
 
 	// create particle
@@ -91,10 +90,6 @@ int main()
 	cube.setShader(transparent);
 
 
-
-
-
-
 	// initialise variables
 	glm::vec3 v = glm::vec3(10.0f, 10.0f, 0.0f);
 	glm::vec3 a = glm::vec3(0.0f);
@@ -104,7 +99,7 @@ int main()
 
 	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
 	float damper = 1.0f;
-
+	
 	
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
@@ -117,7 +112,7 @@ int main()
 		double frameTime = newTime - currentTime;
 
 		currentTime = newTime;
-		accumulator += frameTime;
+		accumulator += frameTime * 5;
 	
 
 		while (accumulator >= dt)
@@ -130,12 +125,17 @@ int main()
 
 				//compute forces
 				//a = f/M
-				a = (g) / 1.0f;
+				//a = (g) / 1.0f;
+
 				particles[i].setAcc(g);
 
+
+				particles[i].getVel() += particles[i].getAcc() * dt;
+				particles[i].setPos(particles[i].getPos() + particles[i].getVel() * dt);
+				
 				//update velocity and position
-				v = v + dt * a;
-				particles[i].setVel(v);
+				//v = v + dt * a;
+				
 				//contact with bounding box
 
 				for (int j = 0; j < 3; j++)
@@ -144,7 +144,7 @@ int main()
 					{
 						std::cout << j << std::endl;
 						//FIX THIS
-						//particles[i].setVel *= (-1.0f * damper);
+						particles[i].getVel()[1] *= (-1.0f * damper);
 
 
 					}
@@ -152,12 +152,11 @@ int main()
 					{
 						std::cout << j << std::endl;
 						//AND THIS
-						//particles[i].setVel *= (-1.0f * damper);
+						particles[i].getVel()[j] *= (-1.0f * damper);
 					}
 
 				}
-				particle1.translate(dt * v);
-				//particles[i].translate(dt * v);
+				
 				
 				accumulator -= dt;
 				t += dt;
@@ -166,7 +165,7 @@ int main()
 
 		}
 
-		const double alpha = accumulator / dt;
+		//const double alpha = accumulator / dt;
 
 		
 
