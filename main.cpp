@@ -27,7 +27,7 @@
 
 // time
 GLfloat t = 0.0f;
-GLfloat dt = 0.001f;
+GLfloat dt = 0.01f;
 
 // main function
 int main()
@@ -57,19 +57,19 @@ int main()
 	//multiple particle creator
 
 	std::vector<Particle> particles;
-	int numberOfParticles = 3;
+	int numberOfParticles = 1;
 
 	for (int i = 0; i < numberOfParticles; i++)
 	{
 		//create particles
 		Particle p = Particle::Particle();
 		particles.push_back(p);
-		//std::cout << "made one" << std::endl;
+		std::cout << "made one" << std::endl;
 		particles[i].setMesh(Mesh("resources/models/sphere.obj"));
 		particles[i].scale(glm::vec3(.1f, .1f, .1f));
 		particles[i].getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-		particles[i].setPos(glm::vec3((i), 3.0f,0.0f ));
-		particles[i].setVel(glm::vec3(sin(i), 5.0f, 0.0f));
+		particles[i].setPos(glm::vec3(-4, 9.9f,0.0f ));
+		particles[i].setVel(glm::vec3(10, 0.0f, 0.0f));
 		//particles[i].translate(glm::vec3(i, 0.0f, 0.0f));
 	}
 
@@ -83,7 +83,6 @@ int main()
 	particle1.setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 
 	//my cube
-
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
 	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
@@ -91,13 +90,13 @@ int main()
 
 
 	// initialise variables
-	//glm::vec3 v = glm::vec3(10.0f, 10.0f, 0.0f);
-	//glm::vec3 a = glm::vec3(0.0f);
 
+	//gravity
 	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
-	//glm::vec3 f = glm::vec3(0.0f);
 
-	//glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
+	//bounding Box
+	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
+	//friction damper
 	float damper = 1.0f;
 	
 	
@@ -112,7 +111,7 @@ int main()
 		double frameTime = newTime - currentTime;
 
 		currentTime = newTime;
-		accumulator += frameTime * 5;
+		accumulator += frameTime;
 	
 
 		while (accumulator >= dt)
@@ -127,33 +126,38 @@ int main()
 				particles[i].setAcc(g);
 
 
-				particles[i].getVel() += particles[i].getAcc() * dt;
-				particles[i].setPos(particles[i].getPos() + particles[i].getVel() * dt);
+				particles[i].setVel(particles[i].getVel() + particles[i].getAcc() * dt);
+				particles[i].translate(particles[i].getVel() * dt);
 
-			
-				
 				//contact with bounding box
 
 				for (int j = 0; j < 3; j++)
 				{
 					if (particles[i].getPos().y <= 0.0f)
 					{
-						std::cout << j << std::endl;
+						//std::cout << j << std::endl;
 						//FIX THIS
-						particles[i].getVel()[1] *= (-1.0f * damper);
+						particles[i].getVel().y *= (-1.0f * damper);
 
 
 					}
 					else if (particles[i].getPos()[j] >= bBox[j] || particles[i].getPos()[j] <= -5.0f)
 					{
-						std::cout << j << std::endl;
+						//std::cout << j << std::endl;
 						//AND THIS
 						particles[i].getVel()[j] *= (-1.0f * damper);
 					}
 
 				}
 				
-				
+				//if particle goes over the blow dryers area of influence
+
+				if (0 < particles[i].getPos().x && particles[i].getPos().x < 2 && 0 < particles[i].getPos().y && particles[i].getPos().y < 4 && -2 < particles[i].getPos().z &&  particles[i].getPos().z < 2)
+				{
+					//std::cout << particles[i].getPos().x << std::endl;
+					particles[i].getVel()[1] *= -1.0f;
+				}
+
 				accumulator -= dt;
 				t += dt;
 			
