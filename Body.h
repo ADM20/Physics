@@ -1,11 +1,23 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <iostream>
 #include "Mesh.h"
+#include "Force.h"
 
 class Body
 {
+private:
+	Mesh m_mesh; // mesh used to represent the body
+
+	float m_mass; // mass
+	float m_cor; // coefficient of restitution
+
+	glm::vec3 m_acc; // acceleration
+	glm::vec3 m_vel; // velocity
+	glm::vec3 m_pos; // position
+
+	std::vector<Force*> m_forces;
 public:
 	Body();
 	~Body();
@@ -65,14 +77,9 @@ public:
 	void rotate(float angle, const glm::vec3 & vect);
 	void scale(const glm::vec3 & vect);
 
-private:
-	Mesh m_mesh; // mesh used to represent the body
-
-	float m_mass; // mass
-	float m_cor; // coefficient of restitution
-
-	glm::vec3 m_acc; // acceleration
-	glm::vec3 m_vel; // velocity
-	glm::vec3 m_pos; // position
+	//FORCE METHODS
+	std::vector<Force*> getForces() { return m_forces; }
+	void addForce(Force *f) { m_forces.push_back(f); }
+	glm::vec3 applyForces(glm::vec3 x, glm::vec3 v, float t, float dt);
 
 };
