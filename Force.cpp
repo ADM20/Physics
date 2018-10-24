@@ -25,11 +25,8 @@ glm::vec3 Gravity::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel)
 glm::vec3 Drag::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel)
 {
 	// return drag
-	float mediumDensity = 1.0f;
-	float dragCoefficient = 1.05f;
-	float area = 0.1f;
-	glm::vec3 e = vel / vel;
-	return (0.5f * mediumDensity * (vel*vel) * dragCoefficient * area * e);
+	glm::vec3 drag = 0.5 * 1.225 * -vel * glm::length(vel) * 1.05 * 0.01;
+	return drag;
 }
 
 // HOOKE

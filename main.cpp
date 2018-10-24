@@ -28,7 +28,7 @@
 
 // time
 GLfloat t = 0.0f;
-GLfloat dt = 0.001f;
+GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
 
@@ -55,7 +55,7 @@ int main()
 	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
-	Shader pShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
+	Shader particleShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
 	
@@ -73,18 +73,23 @@ int main()
 	Force* g = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 	float stiffness = 10.0f;
 	float damper = 1.0f;
+	glm::vec3 pScale = glm::vec3(0.1f, 0.1f, 0.1f);
 
 	p[0] = Particle::Particle();
-	p[0].getMesh().setShader(pShader);
+	p[0].setMesh(pMesh);
+	p[0].scale(pScale);
+	p[0].getMesh().setShader(particleShader);
 	p[0].setPos(glm::vec3(0.0f, 5.0f, 0.0f));
-	//p[0].setMesh(pMesh);
-	/*for (int i = 1; i < particleNum; i++)
+	
+	for (int i = 1; i < particleNum; i++)
 	{
 		std::cout << "Made One" << std::endl;
 		p[i] = Particle::Particle();
 		p[i].setMass(0.1f);
-		p[i].getMesh().setShader(pShader);
-		p[i].setPos(glm::vec3(p[0].getPos().x + i, p[0].getPos().y, p[0].getPos().z));
+		p[i].setMesh(pMesh);
+		p[i].scale(pScale);
+		p[i].getMesh().setShader(particleShader);
+		p[i].setPos(glm::vec3(p[0].getPos().x +i, p[0].getPos().y, p[0].getPos().z));
 		p[i].addForce(g);
 		p[i].addForce(new Drag());
 		if (i != particleNum - 1)
@@ -93,7 +98,7 @@ int main()
 		}
 		p[i].addForce(new Hooke(&p[i], &p[i - 1], stiffness, damper, 1.0f));
 	}
-*/
+
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
@@ -101,7 +106,6 @@ int main()
 		//timestep
 		double newTime = (GLfloat)glfwGetTime();
 		double frameTime = newTime - currentTime;
-		frameTime *= 2.0f;
 		currentTime = newTime;
 		accumulator += frameTime;
 
