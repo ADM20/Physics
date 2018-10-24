@@ -61,44 +61,29 @@ int main()
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
 
-	//multiple particle creator
+	
+	
+	
+	
 
-	std::vector<Particle> particles;
-	int numberOfParticles = 2;
+	// TASK 2.2 HOOKE'S LAW IMPLEMENTATION VARIABLES
+	Particle particle2 = Particle::Particle();
+	particle2.translate(glm::vec3(0.0f, 5.0f, 0.0f));
+	particle2.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+	Particle particle1 = Particle::Particle();
+	particle1.translate(glm::vec3(0.0f, 4.0f, 0.0f));
+	particle1.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+	particle1.addForce(&Gravity::Gravity(glm::vec3(0.0f, -9.8f, 0.0f)));
+	Hooke fsd = Hooke::Hooke(&particle1, &particle2, 10.0f, 0.1f, 1.0f);
+	particle1.addForce(&fsd);
 
-	for (int i = 0; i < numberOfParticles; i++)
-	{
-		//create particles
-		Particle p = Particle::Particle();
-		particles.push_back(p);
-		std::cout << "made one" << std::endl;
-		particles[i].setMesh(Mesh("resources/models/sphere.obj"));
-		particles[i].scale(glm::vec3(.1f, .1f, .1f));
-		particles[i].getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-		particles[i].setPos(glm::vec3(0.0f, 2.0f, 0.0f));
-		//particles[i].setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-		particles[i].translate(glm::vec3(i*0.2, 0.0f, 0.0f));
-		//forces
-		Gravity* fgravity = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
-		particles[i].addForce(fgravity);
-		//Hooke* fsd = new Hooke(&particles[i], &particles[i - 1], 20.0f*i*i, 0.01f, 1.0f);
-		//particles[i].addForce(fsd);
-	}
-
-
-	// create particle used as a static measure
-	Mesh particle1 = Mesh::Mesh("resources/models/sphere.obj");
-	//scale it down (x.1), translate it up by 2.5 and rotate it by 90 degrees around the x axis
-	particle1.translate(glm::vec3(0.0f, 2.0f, 0.0f));
-	particle1.scale(glm::vec3(.1f, .1f, .1f));
-	particle1.rotate((GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
-	particle1.setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-
+	
 	//my cube
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
 	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	cube.setShader(transparent);
+
 
 
 
@@ -120,48 +105,20 @@ int main()
 
 		while (accumulator >= dt)
 		{
+				// TASK 2.2 HOOKE'S LAW IMPLEMENTATION
+			// Calculate acceleration
+			particle1.setAcc(particle1.applyForces(particle1.getPos(), particle1.getVel(), t, dt));
+			// Integrate to calculate new velocity and position
+			particle1.setVel(particle1.getVel() + particle1.getAcc() * dt);
+			particle1.translate(particle1.getVel() * dt);
 
-			for (int i = 0; i < numberOfParticles; i++)
-			{
-				
-
-				/*
-				**	SIMULATION
-				*/
-				
-				// Calculate acceleration
-				particles[i].setAcc(particles[i].applyForces(particles[i].getPos(), particles[i].getVel(), t, dt));
-				// Integrate to calculate new velocity and position
-				glm::vec3 v1 = particles[i].getVel();
-				particles[i].setVel(particles[i].getVel() + particles[i].getAcc() * dt);
-				particles[i].translate(particles[i].getVel() * dt);
-
-
-				//contact with bounding box
-				for (int j = 0; j < 3; j++)
-				{
-					if (particles[i].getPos().y <= 0.0f)
-					{
-						//std::cout << i << std::endl;
-
-						particles[i].getVel().y *= (-1.0f * damper);
-
-
-					}
-					else if (particles[i].getPos()[j] >= bBox[j] || particles[i].getPos()[j] <= -5.0f)
-					{
-						//std::cout << j << std::endl;
-
-						particles[i].getVel()[j] *= (-1.0f * damper);
-					}
-
-				}
+	
 
 
 				accumulator -= dt;
 				t += dt;
 
-			}
+			//}
 
 		}
 
@@ -184,11 +141,15 @@ int main()
 		// draw groud plane
 		app.draw(plane);
 		// draw particles
-		for (int i = 0; i < numberOfParticles; i++)
+		/*for (int i = 0; i < numberOfParticles; i++)
 		{
 			app.draw(particles[i].getMesh());
-		}
-		app.draw(particle1);
+		}*/
+
+		// TASK 2.2 HOOKE'S LAW IMPLEMENTATION DRAW
+		app.draw(particle2.getMesh());
+		app.draw(particle1.getMesh());
+
 		// draw demo objects
 		app.draw(cube);
 		//app.draw(sphere);
