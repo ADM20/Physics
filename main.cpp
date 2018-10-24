@@ -24,10 +24,11 @@
 #include "Mesh.h"
 #include "Particle.h"
 #include "Body.h"
+#include "Force.h"
 
 // time
 GLfloat t = 0.0f;
-GLfloat dt = 0.01f;
+GLfloat dt = 0.001f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
 
@@ -43,12 +44,9 @@ int main()
 
 	//******** initialise variables *************//
 
-	//gravity
-	glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
+
 	//bounding box
 	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
-	//friction damper
-	float damper = 1.0f;
 
 	//
 	// create ground plane
@@ -57,102 +55,101 @@ int main()
 	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
-
+	Shader pShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
-
-	
-	
-	
-	
-
-	// TASK 2.2 HOOKE'S LAW IMPLEMENTATION VARIABLES
-	Particle particle2 = Particle::Particle();
-	particle2.translate(glm::vec3(0.0f, 5.0f, 0.0f));
-	particle2.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-	Particle particle1 = Particle::Particle();
-	particle1.translate(glm::vec3(0.0f, 4.0f, 0.0f));
-	particle1.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-	particle1.addForce(&Gravity::Gravity(glm::vec3(0.0f, -9.8f, 0.0f)));
-	Hooke fsd = Hooke::Hooke(&particle1, &particle2, 10.0f, 0.1f, 1.0f);
-	particle1.addForce(&fsd);
-
 	
 	//my cube
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
 	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	cube.setShader(transparent);
+	
+	Mesh pMesh = Mesh::Mesh("resources/models/sphere.obj");
+	//create particles
+	
+	int particleNum = 5;
+	std::vector<Particle> p(particleNum);
+	Force* g = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
+	float stiffness = 10.0f;
+	float damper = 1.0f;
 
-
-
-
-
-
+	p[0] = Particle::Particle();
+	p[0].getMesh().setShader(pShader);
+	p[0].setPos(glm::vec3(0.0f, 5.0f, 0.0f));
+	//p[0].setMesh(pMesh);
+	/*for (int i = 1; i < particleNum; i++)
+	{
+		std::cout << "Made One" << std::endl;
+		p[i] = Particle::Particle();
+		p[i].setMass(0.1f);
+		p[i].getMesh().setShader(pShader);
+		p[i].setPos(glm::vec3(p[0].getPos().x + i, p[0].getPos().y, p[0].getPos().z));
+		p[i].addForce(g);
+		p[i].addForce(new Drag());
+		if (i != particleNum - 1)
+		{
+			p[i].addForce(new Hooke(&p[i], &p[i + 1], stiffness, damper, 1.0f));
+		}
+		p[i].addForce(new Hooke(&p[i], &p[i - 1], stiffness, damper, 1.0f));
+	}
+*/
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
 
-
-
 		//timestep
 		double newTime = (GLfloat)glfwGetTime();
 		double frameTime = newTime - currentTime;
-
+		frameTime *= 2.0f;
 		currentTime = newTime;
 		accumulator += frameTime;
 
-
 		while (accumulator >= dt)
 		{
-				// TASK 2.2 HOOKE'S LAW IMPLEMENTATION
-			// Calculate acceleration
-			particle1.setAcc(particle1.applyForces(particle1.getPos(), particle1.getVel(), t, dt));
-			// Integrate to calculate new velocity and position
-			particle1.setVel(particle1.getVel() + particle1.getAcc() * dt);
-			particle1.translate(particle1.getVel() * dt);
+			app.doMovement(dt);
 
-	
+			for (int i = 0; i < particleNum; i++)
+			{			
+				glm::vec3 v = p[i].getVel();
+				glm::vec3 r = p[i].getPos();
 
-
+				//force
+				glm::vec3 F = p[i].applyForces(p[i].getPos(), p[i].getVel(), t, dt);
+				// acceleration
+				p[i].setAcc(F);
+				//semi implicit Eular
+				v += dt * p[i].getAcc();
+				r = dt * v;
+				//set postition and velocity
+				p[i].translate(r);
+				p[i].setVel(v);
+			}			
 				accumulator -= dt;
-				t += dt;
-
-			//}
-
+				t += dt;			
 		}
-
-
-
 
 		/*
 		**	INTERACTION
 		*/
 		// Manage interaction
-		app.doMovement(dt);
-
+		
 
 		/*
 		**	RENDER
 		*/
-
 		// clear buffer
 		app.clear();
 		// draw groud plane
 		app.draw(plane);
 		// draw particles
-		/*for (int i = 0; i < numberOfParticles; i++)
+		for (int i = 0; i < particleNum; i++)
 		{
-			app.draw(particles[i].getMesh());
-		}*/
-
-		// TASK 2.2 HOOKE'S LAW IMPLEMENTATION DRAW
-		app.draw(particle2.getMesh());
-		app.draw(particle1.getMesh());
-
-		// draw demo objects
+			//std::cout << "DRAW" << std::endl;
+			app.draw(p[i].getMesh());
+		}
+		// draw objects
 		app.draw(cube);
-		//app.draw(sphere);
 
 		app.display();
 	}

@@ -2,7 +2,7 @@
 #include < glm/glm.hpp >
 #include < iostream >
 
-class Body; // forward declaration to avoid circular dependencies
+class Body; 
 
 class Force
 {
@@ -17,8 +17,8 @@ public:
 /*
 ** GRAVITY CLASS
 */
-class Gravity : public Force {
-
+class Gravity : public Force 
+{
 public:
 	// constructors
 	Gravity() {}
@@ -49,15 +49,23 @@ public:
 };
 
 
-// HOOKE CLASS
+// ** HOOKE CLASS
 class Hooke : public Force
 {
 public:
 	Hooke() {}
 	Hooke(Body * b1, Body * b2, float ks, float kd, float rest)
 	{
-		m_ks = ks; m_kd = kd; m_rest = rest; m_b1 = b1; m_b2 = b2;
+		m_ks = ks; 
+		m_kd = kd;
+		m_rest = rest; 
+		m_b1 = b1;
+		m_b2 = b2;
 	}
+
+	// physics
+	glm::vec3 apply(float mass, const glm::vec3 & pos, const glm::vec3 & vel);
+
 	// get and set methods you can write these yourself as necessary
 	Body* getParticle1() { return m_b1; }
 	void setParticle1(Body *b1) { m_b1 = b1; }
@@ -74,8 +82,8 @@ public:
 	float getDamperCoefficient() { return m_kd; }
 	void setDamperCoefficient(float kd) { m_kd = kd; }
 
-	// physics
-	glm::vec3 apply(float mass, const glm::vec3 & pos, const glm::vec3 & vel);
+	
+	
 
 private:
 	float m_ks;		// spring stiffness

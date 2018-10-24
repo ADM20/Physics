@@ -25,13 +25,3 @@ void Body::scale(const glm::vec3 &vect) {
 	m_mesh.scale(vect);
 }
 
-glm::vec3 Body::applyForces(glm::vec3 x, glm::vec3 v, float t, float dt)
-{
-	glm::vec3 fAccumulator = glm::vec3(0.0f);
-
-	for (auto &f : m_forces)
-	{
-		fAccumulator += f->apply(getMass(), x, v);
-	}
-	return fAccumulator / getMass();
-}

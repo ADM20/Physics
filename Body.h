@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+
 #include "Mesh.h"
 #include "Force.h"
 
@@ -51,6 +52,24 @@ public:
 	float getMass() const { return m_mass; }
 	float getCor() { return m_cor; }
 
+	//get force
+	//FORCE METHODS
+	std::vector<Force*> getForces() { return m_forces; }
+	void addForce(Force *f) { m_forces.push_back(f); }
+
+	glm::vec3 applyForces(glm::vec3 x, glm::vec3 v, double t, float dt)
+	{
+		glm::vec3 fAccumulator = glm::vec3(0.0f);
+
+		for (auto &f : m_forces)
+		{
+			fAccumulator += f->apply(getMass(), x, v);
+		}
+		return fAccumulator / getMass();
+	}
+
+	
+	
 	/*
 	  ** SET METHODS
 	   */
@@ -77,9 +96,6 @@ public:
 	void rotate(float angle, const glm::vec3 & vect);
 	void scale(const glm::vec3 & vect);
 
-	//FORCE METHODS
-	std::vector<Force*> getForces() { return m_forces; }
-	void addForce(Force *f) { m_forces.push_back(f); }
-	glm::vec3 applyForces(glm::vec3 x, glm::vec3 v, float t, float dt);
+	
 
 };
