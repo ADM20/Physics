@@ -31,6 +31,7 @@ GLfloat t = 0.0f;
 GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
+double time1 = t;
 
 // main function
 int main()
@@ -47,7 +48,8 @@ int main()
 
 	//bounding box
 	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
-
+	std::default_random_engine generate;
+	std::uniform_real_distribution<float> variable(-10.0f, 10.0f);
 	//
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
@@ -73,8 +75,8 @@ int main()
 	//std::vector<Particle> p(particleNum);
 	float friction = 0.1f;
 	Force* g = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
-	float stiffness = 5.0f;
-	float damper = 3.0f;
+	float stiffness = 10.0f;
+	float damper = 10.0f;
 	glm::vec3 pScale = glm::vec3(0.1f, 0.1f, 0.1f);
 
 	//p[0] = Particle::Particle();
@@ -116,7 +118,6 @@ int main()
 	//create particles
 	const int particleNum = 10; //create an n x n particle array
 	Particle particles[particleNum][particleNum];
-	
 	//std::vector<Particle> particles(particleNum);
 	for (int i = 0; i < particleNum; i++)
 	{
@@ -137,7 +138,24 @@ int main()
 
 		}
 	}
+
+	//Cone
 	
+	glm::vec3 topCone = glm::vec3(0.0f,8.0f, 0.0f);
+	glm::vec3 bottomCone = glm::vec3(-1.0f);
+	//top and bottom radius
+	float topConeR = 10.0f;
+	float bottomConeR = 5.0f;
+	//Cone total hieght if it went to a point
+	float heightCone = (topConeR*(topCone.y - bottomCone.y)) / (topConeR - bottomConeR);
+	//Where the cone would be a point if it got that far
+	glm::vec3 tip = glm::vec3(topCone);
+	tip.y -= heightCone;
+	//force
+	glm::vec3 forceCone = glm::vec3(0.0f);
+	//force coefficient
+	float coneForceCo = 1.0f;
+
 	
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
@@ -222,11 +240,64 @@ int main()
 						particles[i][j].setVel(1, -particles[i][j].getVel().y * friction);
 						
 					}
+
+
+					if (r.y < topCone.y && r.y >= bottomCone.y)
+					{
+						//cone at the hieght of the particle
+						glm::vec3 heightConeNow = glm::vec3(topCone);
+						heightConeNow.y = r.y;
+						//radius of cone at height
+						float coneR = bottomConeR + (heightConeNow.y / (topCone.y - bottomCone.y))*(topConeR - bottomConeR);
+						//distance from center to particle
+						float newR = glm::length(heightConeNow - r);
+						//radius
+						if (newR < coneR)
+						{
+							//direction of force
+							glm::vec3 fdir = r - tip;
+							//radius to point at top of cone
+							float topR = heightCone * (newR / ((heightCone - (topCone.y - bottomCone.y)) + heightConeNow.y));
+							//point at top at new top radius
+							glm::vec3 projection = r - topCone;
+							projection.y = 0.0f;
+							if (projection != glm::vec3(0.0f)) {
+								projection = glm::normalize(projection);
+							}
+							glm::vec3 topPoint = projection * topR;
+							topPoint += topCone;
+							//vector from point to top of cone through particle
+							glm::vec3 dirTop = glm::vec3(topPoint - tip);
+							forceCone = ((dirTop - fdir) * (coneR - newR))*coneForceCo;
+						}
+						else
+						{
+							forceCone *= 0;
+						}
+					}
+					else
+					{
+						forceCone *= 0;
+					}
+					//total force
+					 F += glm::vec3(0.0f,-9.8f,0.0f) + forceCone;
+					//a = F/m
+					particles[i][j].setAcc((F) / particles[i][j].getMass());
+					//semi implicit Eular
+					v += dt * particles[i][j].getAcc();
+					r += dt * v;
+					//set postition and velocity
+					//particles[i][j].setPos(r);
+					particles[i][j].setVel(v);
 				}
 			}
-			
 
-
+			if (t - time1 >= 3)
+			{
+				topCone.z = (rand()%10)-5;
+				time1 = t;
+				std::cout << topCone.z << std::endl;
+			}
 
 				accumulator -= dt;
 				t += dt;			
