@@ -78,6 +78,7 @@ int main()
 	p[0] = Particle::Particle();
 	p[0].setMesh(pMesh);
 	p[0].scale(pScale);
+	//p[0].addForce(g);
 	p[0].getMesh().setShader(particleShader);
 	p[0].setPos(glm::vec3(0.0f, 5.0f, 0.0f));
 	
@@ -89,7 +90,7 @@ int main()
 		p[i].setMesh(pMesh);
 		p[i].scale(pScale);
 		p[i].getMesh().setShader(particleShader);
-		p[i].setPos(glm::vec3(p[0].getPos().x +i, p[0].getPos().y, p[0].getPos().z));
+		p[i].setPos(glm::vec3(p[0].getPos().x  , p[0].getPos().y, p[0].getPos().z));
 		p[i].addForce(g);
 		p[i].addForce(new Drag());
 		if (i != particleNum - 1)
@@ -97,6 +98,7 @@ int main()
 			p[i].addForce(new Hooke(&p[i], &p[i + 1], stiffness, damper, 1.0f));
 		}
 		p[i].addForce(new Hooke(&p[i], &p[i - 1], stiffness, damper, 1.0f));
+
 	}
 
 	// Game loop
@@ -128,15 +130,24 @@ int main()
 				//set postition and velocity
 				p[i].translate(r);
 				p[i].setVel(v);
-			}			
+
+				//Less awful Collision Detection using plane intersection
+				if (p[i].getPos().y <= plane.getPos().y)
+				{
+					p[i].setPos(1, plane.getPos().y);
+					p[i].setVel(1, -p[i].getVel().y / 2.0f);
+				}
+			}		
+
+			
+
+
+
 				accumulator -= dt;
 				t += dt;			
 		}
 
-		/*
-		**	INTERACTION
-		*/
-		// Manage interaction
+		
 		
 
 		/*
