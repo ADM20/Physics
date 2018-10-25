@@ -31,7 +31,7 @@ GLfloat t = 0.0f;
 GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
-double time1 = t;
+double time1 = t;//for my random number gen
 
 // main function
 int main()
