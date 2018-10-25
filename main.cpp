@@ -68,8 +68,9 @@ int main()
 	Mesh pMesh = Mesh::Mesh("resources/models/sphere.obj");
 	//create particles
 	
-	int particleNum = 5;
+	int particleNum = 10;
 	std::vector<Particle> p(particleNum);
+	float friction = 0.9f;
 	Force* g = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 	float stiffness = 10.0f;
 	float damper = 1.0f;
@@ -79,10 +80,19 @@ int main()
 	p[0].setMesh(pMesh);
 	p[0].scale(pScale);
 	//p[0].addForce(g);
+	//p[0].setVel(glm::vec3(5.0f, 0.0f, 0.0f));
 	p[0].getMesh().setShader(particleShader);
-	p[0].setPos(glm::vec3(0.0f, 5.0f, 0.0f));
+	p[0].setPos(glm::vec3(-5.0f, 5.0f, 0.0f));
 	
-	for (int i = 1; i < particleNum; i++)
+	
+	p[particleNum-1] = Particle::Particle();
+	p[particleNum-1].setMesh(pMesh);
+	p[particleNum-1].scale(pScale);
+	//p[particleNum-1].addForce(g);
+	p[particleNum-1].getMesh().setShader(particleShader);
+	p[particleNum-1].setPos(glm::vec3(5.0f, 5.0f, 0.0f));
+	
+	for (int i = 1; i < particleNum - 1; i++)
 	{
 		std::cout << "Made One" << std::endl;
 		p[i] = Particle::Particle();
@@ -90,7 +100,7 @@ int main()
 		p[i].setMesh(pMesh);
 		p[i].scale(pScale);
 		p[i].getMesh().setShader(particleShader);
-		p[i].setPos(glm::vec3(p[0].getPos().x  , p[0].getPos().y, p[0].getPos().z));
+		p[i].setPos(glm::vec3(p[0].getPos().x + i, p[0].getPos().y, p[0].getPos().z));
 		p[i].addForce(g);
 		p[i].addForce(new Drag());
 		if (i != particleNum - 1)
@@ -98,7 +108,7 @@ int main()
 			p[i].addForce(new Hooke(&p[i], &p[i + 1], stiffness, damper, 1.0f));
 		}
 		p[i].addForce(new Hooke(&p[i], &p[i - 1], stiffness, damper, 1.0f));
-
+		//p[i].setVel(p[i].getVel * friction);
 	}
 
 	// Game loop
@@ -132,10 +142,25 @@ int main()
 				p[i].setVel(v);
 
 				//Less awful Collision Detection using plane intersection
-				if (p[i].getPos().y <= plane.getPos().y)
+				/*if (p[i].getPos().y <= plane.getPos().y)
 				{
 					p[i].setPos(1, plane.getPos().y);
-					p[i].setVel(1, -p[i].getVel().y / 2.0f);
+					p[i].setVel(1, -p[i].getVel().y * friction );
+				}*/
+
+				for (int j = 0; j < 3; j++)
+				{
+					if (p[i].getPos().y <= plane.getPos().y)
+					{
+						p[i].setPos(1, plane.getPos().y);
+						p[i].getVel()[j] *= (-1.0f * friction);
+						p[i].getVel()[0] *= -1.0f;
+
+					}
+					else if (p[i].getPos()[j] >= bBox[j] || p[i].getPos()[j] <= -5.0f)
+					{
+						p[i].getVel()[j] *= (-1.0f * friction);
+					}
 				}
 			}		
 
