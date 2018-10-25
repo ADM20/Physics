@@ -71,10 +71,10 @@ int main()
 	////create particles
 	//int particleNum = 10;
 	//std::vector<Particle> p(particleNum);
-	float friction = 0.5f;
+	float friction = 0.1f;
 	Force* g = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
-	float stiffness = 10.0f;
-	float damper = 1.0f;
+	float stiffness = 5.0f;
+	float damper = 3.0f;
 	glm::vec3 pScale = glm::vec3(0.1f, 0.1f, 0.1f);
 
 	//p[0] = Particle::Particle();
@@ -123,7 +123,7 @@ int main()
 		for (int j = 0; j < particleNum; j++)
 		{
 			Particle particle = Particle::Particle();
-			particle.translate(glm::vec3(-5.0f + i, 5.0f, -2.5f + j));
+			particle.translate(glm::vec3(-5.0f + i, 10.0f, -2.5f + j));
 			//particles[i][j].setMesh(pMesh);
 			particle.getMesh().setShader(Shader(particleShader));
 			particles[i][j] = particle;
@@ -134,6 +134,7 @@ int main()
 			particles[i][j].addForce(new Hooke(&particles[i][j], &particles[i + 1][j], stiffness, damper, 1.0f));
 			particles[i][j].addForce(new Hooke(&particles[i][j], &particles[i][j - 1], stiffness, damper, 1.0f));
 			particles[i][j].addForce(new Hooke(&particles[i][j], &particles[i][j + 1], stiffness, damper, 1.0f));
+
 		}
 	}
 	
@@ -198,12 +199,21 @@ int main()
 			{
 				for (int j = 1; j < particleNum - 1; j++)
 				{
-					// Calculate acceleration
-					particles[i][j].setAcc(particles[i][j].applyForces(particles[i][j].getPos(), particles[i][j].getVel(), t, dt));
-					// Integrate to calculate new velocity and position
-					particles[i][j].setVel(particles[i][j].getVel() + particles[i][j].getAcc() * dt);
-					particles[i][j].translate(particles[i][j].getVel() * dt);
-					// Plane collision
+						glm::vec3 v = particles[i][j].getVel();
+						glm::vec3 r = particles[i][j].getPos();
+
+						//force
+						glm::vec3 F = particles[i][j].applyForces(particles[i][j].getPos(), particles[i][j].getVel(), t, dt);
+						// acceleration
+						particles[i][j].setAcc(F);
+						//semi implicit Eular
+						v += dt * particles[i][j].getAcc();
+						r = dt * v;
+						//set postition and velocity
+						particles[i][j].translate(r);
+						particles[i][j].setVel(v);
+
+					// collide with floor
 					if (particles[i][j].getPos().y <= plane.getPos().y)
 					{
 						//stop particles from falling through the floor
@@ -241,9 +251,9 @@ int main()
 		//}
 
 		//draw cloth
-		for (int i = 0; i < particleNum; i++)
+		for (int i =0; i < particleNum; i++)
 		{
-			for (int j = 0; j < 10; j++)
+			for (int j = 0; j < particleNum; j++)
 			{
 
 				app.draw(particles[i][j].getMesh());
