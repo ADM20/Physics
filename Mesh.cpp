@@ -8,17 +8,39 @@
 // default constructor creates a horizontal plane or dimensions 1 x 1 centered on the origin
 Mesh::Mesh()
 {
-	// Create triangle vertices
-	Vertex vertices[] = { Vertex(glm::vec3(-1.0,-1.0,0.0)),
-		Vertex(glm::vec3(0, 1.0, 0.0)),
-		Vertex(glm::vec3(1.0, -1.0, 0.0))
-	};
+	//some tasty cheese
+	Vertex vertices[36];
+	glm::vec3 normals[36];
+	
+	// create quad vertices
+	vertices[0] = Vertex(glm::vec3(-1.0f, 0.0f, -1.0f));
+	vertices[1] = Vertex(glm::vec3(1.0f, 0.0f, -1.0f));
+	vertices[2] = Vertex(glm::vec3(-1.0f, 0.0f, 1.0f));
+	vertices[3] = Vertex(glm::vec3(1.0f, 0.0f, -1.0f));
+	vertices[4] = Vertex(glm::vec3(-1.0f, 0.0f, 1.0f));
+	vertices[5] = Vertex(glm::vec3(1.0f, 0.0f, 1.0f));
 
-	// tirangle normals
-	glm::vec3 normals[] = { glm::vec3(.0f, .0f, 1.0f), glm::vec3(.0f, .0f, 1.0f), glm::vec3(.0f, .0f, 1.0f) };
+	// create normals
+	normals[0] = glm::vec3(0.0f, 1.0f, 0.0f);
+	normals[1] = glm::vec3(0.0f, 1.0f, 0.0f);
+	normals[2] = glm::vec3(0.0f, 1.0f, 0.0f);
+	normals[3] = glm::vec3(0.0f, 1.0f, 0.0f);
+	normals[4] = glm::vec3(0.0f, 1.0f, 0.0f);
+	normals[5] = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	// number of vertices
-	m_numIndices = 3;
+	m_numIndices = 6;
+	//// Create triangle vertices
+	//Vertex vertices[] = { Vertex(glm::vec3(-1.0,-1.0,0.0)),
+	//	Vertex(glm::vec3(0, 1.0, 0.0)),
+	//	Vertex(glm::vec3(1.0, -1.0, 0.0))
+	//};
+
+	//// tirangle normals
+	//glm::vec3 normals[] = { glm::vec3(.0f, .0f, 1.0f), glm::vec3(.0f, .0f, 1.0f), glm::vec3(.0f, .0f, 1.0f) };
+
+	// number of vertices
+	//m_numIndices = 3;
 
 	//create mesh
 	initMesh(vertices, normals);

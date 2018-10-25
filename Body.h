@@ -74,7 +74,11 @@ public:
 	  ** SET METHODS
 	   */
 	   // mesh
-	void setMesh(Mesh m) { m_mesh = m; }
+	void setMesh(Mesh m)
+	{ 
+
+		m_mesh = m;
+	}
 
 	// dynamic variables
 	void setAcc(const glm::vec3 & vect) { m_acc = vect; }
