@@ -131,6 +131,7 @@ int main()
 			//add forces
 			particles[i][j].addForce(g);
 			particles[i][j].addForce(new Drag());
+			//connect the particles
 			particles[i][j].addForce(new Hooke(&particles[i][j], &particles[i - 1][j], stiffness, damper, 1.0f));
 			particles[i][j].addForce(new Hooke(&particles[i][j], &particles[i + 1][j], stiffness, damper, 1.0f));
 			particles[i][j].addForce(new Hooke(&particles[i][j], &particles[i][j - 1], stiffness, damper, 1.0f));
