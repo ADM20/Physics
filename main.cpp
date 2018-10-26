@@ -294,7 +294,8 @@ int main()
 
 			if (t - time1 >= 3)
 			{
-				topCone.z = (rand()%10)-5;
+				float randomNum = (float)(rand() % 10) - 5;
+				topCone.z = randomNum;
 				time1 = t;
 				std::cout << topCone.z << std::endl;
 			}
