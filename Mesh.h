@@ -63,6 +63,10 @@ public:
 	// destructor
 	virtual ~Mesh();
 
+	//rigidbody vertices
+	std::vector<Vertex> getVertices() { return m_vertices; }
+
+
 	/*
 	** GET AND SET METHODS
 	*/
@@ -138,7 +142,7 @@ private:
 	glm::mat4 m_translate;
 	glm::mat4 m_rotate;
 	glm::mat4 m_scale;
-
+	std::vector<Vertex> m_vertices;
 	Shader m_shader;
 };
 

@@ -68,6 +68,8 @@ public:
 		return fAccumulator / getMass();
 	}
 
+	//Rigid Body Methods
+	//void setRotate(const glm::mat4 &mat){m_mesh.setRotate(mat);}
 	
 	
 	/*

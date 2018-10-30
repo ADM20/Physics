@@ -135,6 +135,13 @@ Mesh::Mesh(MeshType type)
 		vertices[34] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
 		vertices[35] = Vertex(glm::vec3(1.0f, -1.0f, 1.0f));
 
+		//*******RIGID BODY CODE ***********//
+		//genertate unique vertex vector (no DUPES)
+		m_vertices = std::vector<Vertex>(std::begin(vertices), std::end(vertices));
+		/*
+		*COMPLETE THIS PART
+		*/
+
 		//normals
 		normals[0] = glm::vec3(0.0f, 0.0f, -1.0f);
 		normals[1] = glm::vec3(0.0f, 0.0f, -1.0f);
