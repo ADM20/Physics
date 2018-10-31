@@ -25,6 +25,7 @@
 #include "Particle.h"
 #include "Body.h"
 #include "Force.h"
+#include "RigidBody.h"
 
 // time
 GLfloat t = 0.0f;
@@ -41,21 +42,18 @@ int main()
 	app.initRender();
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 20.0f));
 
-
-
 	//******** initialise variables *************//
-
-
 	//bounding box
 	glm::vec3 bBox = glm::vec3(5.0f, 10.0f, 5.0f);
 	//
+	Force* gravity = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
 	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
-	Shader particleShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
+	Shader pShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
 	
@@ -66,10 +64,27 @@ int main()
 	cube.setShader(transparent);
 	
 	Mesh pMesh = Mesh::Mesh("resources/models/sphere.obj");
-	
-	
 
-	
+
+	RigidBody rb = RigidBody::RigidBody();
+	Mesh m = Mesh::Mesh(Mesh::MeshType::CUBE);
+	rb.setMesh(m);
+	rb.getMesh().setShader(lambert);
+
+
+	// rigid body motion values
+	rb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
+	rb.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
+	rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
+	//add forces
+	rb.addForce(gravity);
+
+
+
+
+
+
+	/************************************/
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
@@ -96,7 +111,8 @@ int main()
 		app.clear();
 		// draw groud plane
 		app.draw(plane);
-		// draw particles
+		// draw Rigid Body
+		app.draw(rb.getMesh());
 		
 		// draw objects
 		app.draw(cube);

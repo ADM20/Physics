@@ -135,12 +135,7 @@ Mesh::Mesh(MeshType type)
 		vertices[34] = Vertex(glm::vec3(1.0f, 1.0f, 1.0f));
 		vertices[35] = Vertex(glm::vec3(1.0f, -1.0f, 1.0f));
 
-		//*******RIGID BODY CODE ***********//
-		//genertate unique vertex vector (no DUPES)
-		m_vertices = std::vector<Vertex>(std::begin(vertices), std::end(vertices));
-		/*
-		*COMPLETE THIS PART
-		*/
+		
 
 		//normals
 		normals[0] = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -185,6 +180,39 @@ Mesh::Mesh(MeshType type)
 
 		break;
 	}
+	
+	//*******RIGID BODY CODE ***********//
+		//genertate unique vertex vector (no DUPES)
+	m_vertices = std::vector<Vertex>(std::begin(vertices), std::end(vertices));
+	/*
+	*COMPLETE THIS PART
+	*/
+	int counter = 1;
+	unsigned int i = 0;
+	//for every vertex
+	while (i < m_vertices.size()) 
+	{
+		unsigned int j = i + 1;
+		bool duplicateFound = false;
+		//check for dupe
+		while (j < m_vertices.size() && !duplicateFound) {
+			if (m_vertices.at(i).getCoord() == m_vertices.at(j).getCoord()) {
+				duplicateFound = true;
+			}
+			j++;
+		}
+		//if dupe found, delete it
+		if (duplicateFound)
+		{
+			std::cout << counter << std::endl;
+			m_vertices.erase(m_vertices.begin() + i);
+			counter += 1;
+		}
+		else {
+			++i;
+		}
+	}
+	
 	
 
 	//create mesh
