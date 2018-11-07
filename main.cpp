@@ -34,13 +34,14 @@ double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
 
 //*************************
-void applyImpulse(glm::vec3 impulse, glm::vec3 ipos, RigidBody &rb)
+void applyImpulse(RigidBody &rb,glm::vec3 imPos,glm::vec3 impulse )
 {
-	glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInvInertia() * glm::mat3(glm::transpose(rb.getRotate()));
-	glm::vec3 deltav = impulse / rb.getMass();
-	rb.setVel(rb.getVel() + deltav);
-	glm::vec3 r = ipos - rb.getPos();
-	glm::vec3 deltaomega = ininertia * glm::cross(r, impulse);
+	glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+	//velocity change
+	glm::vec3 dV = impulse / rb.getMass();
+	rb.setVel(rb.getVel() + dV);
+	glm::vec3 r = imPos - rb.getPos();
+	glm::vec3 deltaomega = inInertia * glm::cross(r, impulse);
 	rb.setAngVel(rb.getAngVel() + deltaomega);
 
 }
@@ -96,11 +97,16 @@ int main()
 
 	//****************
 	//IMPULSES
-	glm::vec3 ipos(0.0f, 5.0f, 0.0f);
+	//position of impulse
+	glm::vec3 imPos(0.0f, 5.0f, 0.0f);
+	//impulse force
 	glm::vec3 impulse(-10.0f, 0.0f, 0.0f);
+	//has impulse already happend
 	bool applied = false;
+	//*************
+	//COLLISIONS
+	std::vector<glm::vec3> collisions;
 	//***************
-
 
 	/************************************/
 	// Game loop
@@ -119,7 +125,7 @@ int main()
 
 			//****************************
 			//inertia
-			glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInvInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+			glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
 			//**********************
 			// integration (translation)
 			rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
@@ -136,7 +142,8 @@ int main()
 			R += dt * angVelSkew*R;
 			R = glm::orthonormalize(R);
 			rb.setRotate(glm::mat4(R));
-				
+			//************************
+			//collision detection
 			for (auto vertex : rb.getMesh().getVertices())
 			{
 				glm::vec3 coordinates = rb.getMesh().getModel() * glm::vec4(vertex.getCoord(), 1.0f);
@@ -147,12 +154,11 @@ int main()
 					rb.translate(rb.getVel() * dt);
 				}
 			}
-
-			//**************
+			//****************************
 			//impulse after 2s
 			if (t >= 2 && !applied)
 			{
-				applyImpulse(impulse, ipos, rb);
+				applyImpulse( rb,imPos, impulse);
 				applied = true;
 			}
 			//*******************
