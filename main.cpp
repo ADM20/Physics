@@ -33,6 +33,18 @@ GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
 
+//*************************
+void applyImpulse(glm::vec3 impulse, glm::vec3 ipos, RigidBody &rb)
+{
+	glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInvInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+	glm::vec3 deltav = impulse / rb.getMass();
+	rb.setVel(rb.getVel() + deltav);
+	glm::vec3 r = ipos - rb.getPos();
+	glm::vec3 deltaomega = ininertia * glm::cross(r, impulse);
+	rb.setAngVel(rb.getAngVel() + deltaomega);
+
+}
+//*************
 
 // main function
 int main()
@@ -73,15 +85,21 @@ int main()
 
 
 	// rigid body motion values
+	rb.scale(glm::vec3(1.0f,3.0f,1.0f));
 	rb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
-	rb.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
+	rb.setMass(1.0f);
+	rb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 	rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-	//add forces
+	
+	//add forces - take out for testing impulses
 	rb.addForce(gravity);
 
-
-
-
+	//****************
+	//IMPULSES
+	glm::vec3 ipos(0.0f, 5.0f, 0.0f);
+	glm::vec3 impulse(-10.0f, 0.0f, 0.0f);
+	bool applied = false;
+	//***************
 
 
 	/************************************/
@@ -98,9 +116,46 @@ int main()
 		while (accumulator >= dt)
 		{
 			app.doMovement(dt);
-			
+
+			//****************************
+			//inertia
+			glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInvInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+			//**********************
+			// integration (translation)
+			rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
+			rb.setVel(rb.getVel() + dt * rb.getAcc());
+			rb.translate(rb.getVel() * dt);
+
+			//integrateion (rotation)
+			rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
+			//create skew symmetric matrix for w
+			glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
+			//create 3x3 rotation matrix from rb rotation matrix
+			glm::mat3 R = glm::mat3(rb.getRotate());
+			//update rotation matrix
+			R += dt * angVelSkew*R;
+			R = glm::orthonormalize(R);
+			rb.setRotate(glm::mat4(R));
 				
-		
+			for (auto vertex : rb.getMesh().getVertices())
+			{
+				glm::vec3 coordinates = rb.getMesh().getModel() * glm::vec4(vertex.getCoord(), 1.0f);
+				if (coordinates.y <= plane.getPos().y)
+				{
+					rb.setPos(rb.getPos() + plane.getPos());
+					rb.setVel(1, -rb.getVel().y);
+					rb.translate(rb.getVel() * dt);
+				}
+			}
+
+			//**************
+			//impulse after 2s
+			if (t >= 2 && !applied)
+			{
+				applyImpulse(impulse, ipos, rb);
+				applied = true;
+			}
+			//*******************
 				accumulator -= dt;
 				t += dt;			
 		}

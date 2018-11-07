@@ -65,7 +65,10 @@ public:
 
 	//rigidbody vertices
 	std::vector<Vertex> getVertices() { return m_vertices; }
-
+	void setRotate(const glm::mat4 &matRot)
+	{
+		m_rotate = matRot;
+	}
 
 	/*
 	** GET AND SET METHODS
