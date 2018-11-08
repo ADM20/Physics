@@ -125,22 +125,24 @@ int main()
 			/*
 			**	SIMULATION
 			*/
-			//loop through collisions
+			//loop every vertex to check for collisons
 			for (int i = 0; i < rb.getMesh().getVertices().size(); i++)
 			{
-				//put vertex into worldspace
 				glm::vec4 worldspace = rb.getMesh().getModel() * glm::vec4(glm::vec3(rb.getMesh().getVertices()[i].getCoord()), 1.0f);
-				//check if vertex is below plane
-				if (worldspace.y <= plane.getPos().y && ok)
+				//is point below the plane detect the collision
+				if (plane.getPos().y >= worldspace.y && ok)
 				{
-					//add vertex to collisions
 					collisions.push_back(glm::vec3(worldspace));
 				}
 
 			}
-			//if collided
+			//if there was a collision
 			if (collisions.size() > 0 && ok)
 			{
+				
+				
+				
+				
 				//declare average
 				glm::vec3 average;
 				//loop through collisions
@@ -157,35 +159,26 @@ int main()
 				std::cout << "AVERAGE" << std::endl;
 				outVec3(average);
 				//set ok to false
-				ok = false;
+				//ok = false;
 			}
-			//if hasn't collided 
+			//if no collision was detected, continue as normal 
 			if (ok)
-			{
-				///
+			{				
 				//calculate inverse inetia with rotation
-				glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+				glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+
+				//integration translation
+				rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
+				rb.setVel(rb.getVel() + dt * rb.getAcc());
+				rb.translate(rb.getVel() * dt);
 
 				//intergration rotation
 				rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
 				glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
-				glm::mat3 R = glm::mat3(rb.getRotate());
+				glm::mat3 R = glm::mat3(rb.getRotate());		
 				R += dt * angVelSkew * R;
 				R = glm::orthonormalize(R);
 				rb.setRotate(R);
-
-				///
-
-				//total Force/mass
-				glm::vec3 F = rb.applyForces(rb.getPos(), rb.getVel(), t, dt);
-
-				//sett acceleration
-				rb.setAcc(F);
-
-				//semi implicit Eular
-				rb.setVel(rb.getVel() + dt * rb.getAcc());
-				rb.setPos(rb.getPos() + dt * rb.getVel());
-
 			}
 			//*******************
 				accumulator -= dt;
