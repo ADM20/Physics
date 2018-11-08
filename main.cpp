@@ -32,7 +32,10 @@ GLfloat t = 0.0f;
 GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
-
+void outVec3(glm::vec3 v)
+{
+	std::cout << v.x << ",\t" << v.y << ",\t" << v.z << std::endl;
+}
 //*************************
 void applyImpulse(RigidBody &rb,glm::vec3 imPos,glm::vec3 impulse )
 {
@@ -41,8 +44,8 @@ void applyImpulse(RigidBody &rb,glm::vec3 imPos,glm::vec3 impulse )
 	glm::vec3 dV = impulse / rb.getMass();
 	rb.setVel(rb.getVel() + dV);
 	glm::vec3 r = imPos - rb.getPos();
-	glm::vec3 deltaomega = inInertia * glm::cross(r, impulse);
-	rb.setAngVel(rb.getAngVel() + deltaomega);
+	glm::vec3 deltaOmega = inInertia * glm::cross(r, impulse);
+	rb.setAngVel(rb.getAngVel() + deltaOmega);
 
 }
 //*************
@@ -78,20 +81,16 @@ int main()
 	
 	Mesh pMesh = Mesh::Mesh("resources/models/sphere.obj");
 
-
+	//rigid body
 	RigidBody rb = RigidBody::RigidBody();
 	Mesh m = Mesh::Mesh(Mesh::MeshType::CUBE);
 	rb.setMesh(m);
 	rb.getMesh().setShader(lambert);
-
-
-	// rigid body motion values
 	rb.scale(glm::vec3(1.0f,3.0f,1.0f));
 	rb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	rb.setMass(1.0f);
 	rb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 	rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-	
 	//add forces - take out for testing impulses
 	rb.addForce(gravity);
 
@@ -107,7 +106,7 @@ int main()
 	//COLLISIONS
 	std::vector<glm::vec3> collisions;
 	//***************
-
+	bool ok = true;
 	/************************************/
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
@@ -123,43 +122,70 @@ int main()
 		{
 			app.doMovement(dt);
 
-			//****************************
-			//inertia
-			glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
-			//**********************
-			// integration (translation)
-			rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
-			rb.setVel(rb.getVel() + dt * rb.getAcc());
-			rb.translate(rb.getVel() * dt);
-
-			//integrateion (rotation)
-			rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
-			//create skew symmetric matrix for w
-			glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
-			//create 3x3 rotation matrix from rb rotation matrix
-			glm::mat3 R = glm::mat3(rb.getRotate());
-			//update rotation matrix
-			R += dt * angVelSkew*R;
-			R = glm::orthonormalize(R);
-			rb.setRotate(glm::mat4(R));
-			//************************
-			//collision detection
-			for (auto vertex : rb.getMesh().getVertices())
+			/*
+			**	SIMULATION
+			*/
+			//loop through collisions
+			for (int i = 0; i < rb.getMesh().getVertices().size(); i++)
 			{
-				glm::vec3 coordinates = rb.getMesh().getModel() * glm::vec4(vertex.getCoord(), 1.0f);
-				if (coordinates.y <= plane.getPos().y)
+				//put vertex into worldspace
+				glm::vec4 worldspace = rb.getMesh().getModel() * glm::vec4(glm::vec3(rb.getMesh().getVertices()[i].getCoord()), 1.0f);
+				//check if vertex is below plane
+				if (worldspace.y <= plane.getPos().y && ok)
 				{
-					rb.setPos(rb.getPos() + plane.getPos());
-					rb.setVel(1, -rb.getVel().y);
-					rb.translate(rb.getVel() * dt);
+					//add vertex to collisions
+					collisions.push_back(glm::vec3(worldspace));
 				}
+
 			}
-			//****************************
-			//impulse after 2s
-			if (t >= 2 && !applied)
+			//if collided
+			if (collisions.size() > 0 && ok)
 			{
-				applyImpulse( rb,imPos, impulse);
-				applied = true;
+				//declare average
+				glm::vec3 average;
+				//loop through collisions
+				for (glm::vec3 c : collisions)
+				{
+					//add collision to average
+					average += c;
+					//output collision
+					outVec3(c);
+				}
+				//calculate average
+				average = average / collisions.size();
+				//output average
+				std::cout << "AVERAGE" << std::endl;
+				outVec3(average);
+				//set ok to false
+				ok = false;
+			}
+			//if hasn't collided 
+			if (ok)
+			{
+				///
+				//calculate inverse inetia with rotation
+				glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+
+				//intergration rotation
+				rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
+				glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
+				glm::mat3 R = glm::mat3(rb.getRotate());
+				R += dt * angVelSkew * R;
+				R = glm::orthonormalize(R);
+				rb.setRotate(R);
+
+				///
+
+				//total Force/mass
+				glm::vec3 F = rb.applyForces(rb.getPos(), rb.getVel(), t, dt);
+
+				//sett acceleration
+				rb.setAcc(F);
+
+				//semi implicit Eular
+				rb.setVel(rb.getVel() + dt * rb.getAcc());
+				rb.setPos(rb.getPos() + dt * rb.getVel());
+
 			}
 			//*******************
 				accumulator -= dt;
