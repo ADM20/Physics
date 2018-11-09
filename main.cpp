@@ -32,21 +32,22 @@ GLfloat t = 0.0f;
 GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
-void outVec3(glm::vec3 v)
-{
-	std::cout << v.x << ",\t" << v.y << ",\t" << v.z << std::endl;
-}
+
 //*************************
-void applyImpulse(RigidBody &rb,glm::vec3 imPos,glm::vec3 impulse )
+void applyImpulse(RigidBody &rb, glm::vec3 imPos, glm::vec3 impulse)
 {
 	glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
 	//velocity change
-	glm::vec3 dV = impulse / rb.getMass();
-	rb.setVel(rb.getVel() + dV);
+	glm::vec3 deltaV = impulse / rb.getMass();
+	rb.setVel(rb.getVel() + deltaV);
 	glm::vec3 r = imPos - rb.getPos();
 	glm::vec3 deltaOmega = inInertia * glm::cross(r, impulse);
 	rb.setAngVel(rb.getAngVel() + deltaOmega);
 
+}
+void printVec(glm::vec3 vector)
+{
+	std::cout << vector.x << ",\t" << vector.y << ",\t" << vector.z << std::endl;
 }
 //*************
 
@@ -72,13 +73,13 @@ int main()
 	Shader pShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
-	
+
 	//my cube
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
 	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	cube.setShader(transparent);
-	
+
 	Mesh pMesh = Mesh::Mesh("resources/models/sphere.obj");
 
 	//rigid body
@@ -86,7 +87,7 @@ int main()
 	Mesh m = Mesh::Mesh(Mesh::MeshType::CUBE);
 	rb.setMesh(m);
 	rb.getMesh().setShader(lambert);
-	rb.scale(glm::vec3(1.0f,3.0f,1.0f));
+	rb.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 	rb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	rb.setMass(1.0f);
 	rb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -139,27 +140,29 @@ int main()
 			//if there was a collision
 			if (collisions.size() > 0 && !collision)
 			{
-				//declare average
+				//collisions true
+				collision = true;
+
+				// find the average 
 				glm::vec3 average;
-				//loop through collisions
+				//for every collision print its values to console
 				for (glm::vec3 c : collisions)
 				{
-					//add collision to average
+					//add to average
 					average += c;
 					//output collision
-					outVec3(c);
+					printVec(c);
 				}
-				//calculate average
+
+				//average = total / number of collisions
 				average = average / collisions.size();
 				//output average
-				std::cout << "AVERAGE" << std::endl;
-				outVec3(average);
-				//set ok to false
-				collision = true;
+				std::cout << "Average" << std::endl;
+				printVec(average);
 			}
 			//if no collision was detected, continue as normal 
 			if (!collision)
-			{		
+			{
 				//calculate inverse inetia with rotation
 				glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
 
@@ -171,14 +174,14 @@ int main()
 				//intergration rotation
 				rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
 				glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
-				glm::mat3 R = glm::mat3(rb.getRotate());		
+				glm::mat3 R = glm::mat3(rb.getRotate());
 				R += dt * angVelSkew * R;
 				R = glm::orthonormalize(R);
 				rb.setRotate(R);
 			}
 			//*******************
-				accumulator -= dt;
-				t += dt;			
+			accumulator -= dt;
+			t += dt;
 		}
 		/*
 		**	RENDER
@@ -189,9 +192,9 @@ int main()
 		app.draw(plane);
 		// draw Rigid Body
 		app.draw(rb.getMesh());
-		
+
 		// draw objects
-		app.draw(cube);
+		//app.draw(cube);
 
 		app.display();
 	}
