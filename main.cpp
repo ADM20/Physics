@@ -106,7 +106,7 @@ int main()
 	//COLLISIONS
 	std::vector<glm::vec3> collisions;
 	//***************
-	bool ok = true;
+	bool collision = false;
 	/************************************/
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
@@ -130,14 +130,14 @@ int main()
 			{
 				glm::vec4 worldspace = rb.getMesh().getModel() * glm::vec4(glm::vec3(rb.getMesh().getVertices()[i].getCoord()), 1.0f);
 				//is point below the plane detect the collision
-				if (plane.getPos().y >= worldspace.y && ok)
+				if (plane.getPos().y >= worldspace.y && !collision)
 				{
 					collisions.push_back(glm::vec3(worldspace));
 				}
 
 			}
 			//if there was a collision
-			if (collisions.size() > 0 && ok)
+			if (collisions.size() > 0 && !collision)
 			{
 				//declare average
 				glm::vec3 average;
@@ -155,10 +155,10 @@ int main()
 				std::cout << "AVERAGE" << std::endl;
 				outVec3(average);
 				//set ok to false
-				ok = false;
+				collision = true;
 			}
 			//if no collision was detected, continue as normal 
-			if (ok)
+			if (!collision)
 			{		
 				//calculate inverse inetia with rotation
 				glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
