@@ -139,10 +139,6 @@ int main()
 			//if there was a collision
 			if (collisions.size() > 0 && ok)
 			{
-				
-				
-				
-				
 				//declare average
 				glm::vec3 average;
 				//loop through collisions
@@ -159,11 +155,11 @@ int main()
 				std::cout << "AVERAGE" << std::endl;
 				outVec3(average);
 				//set ok to false
-				//ok = false;
+				ok = false;
 			}
 			//if no collision was detected, continue as normal 
 			if (ok)
-			{				
+			{		
 				//calculate inverse inetia with rotation
 				glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
 
