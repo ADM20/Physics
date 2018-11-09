@@ -37,8 +37,9 @@ void outVec3(glm::vec3 v)
 	std::cout << v.x << ",\t" << v.y << ",\t" << v.z << std::endl;
 }
 //*************************
-void applyImpulse(RigidBody &rb,glm::vec3 imPos,glm::vec3 impulse )
+void applyImpulse(glm::vec3 impulse, glm::vec3 ipos, RigidBody &rb)
 {
+<<<<<<< HEAD
 	glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
 	//velocity change
 	glm::vec3 dV = impulse / rb.getMass();
@@ -46,6 +47,14 @@ void applyImpulse(RigidBody &rb,glm::vec3 imPos,glm::vec3 impulse )
 	glm::vec3 r = imPos - rb.getPos();
 	glm::vec3 deltaOmega = inInertia * glm::cross(r, impulse);
 	rb.setAngVel(rb.getAngVel() + deltaOmega);
+=======
+	glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInvInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+	glm::vec3 deltav = impulse / rb.getMass();
+	rb.setVel(rb.getVel() + deltav);
+	glm::vec3 r = ipos - rb.getPos();
+	glm::vec3 deltaomega = ininertia * glm::cross(r, impulse);
+	rb.setAngVel(rb.getAngVel() + deltaomega);
+>>>>>>> parent of a983582... Bugfixes
 
 }
 //*************
@@ -96,17 +105,16 @@ int main()
 
 	//****************
 	//IMPULSES
-	//position of impulse
-	glm::vec3 imPos(0.0f, 5.0f, 0.0f);
-	//impulse force
+	glm::vec3 ipos(0.0f, 5.0f, 0.0f);
 	glm::vec3 impulse(-10.0f, 0.0f, 0.0f);
-	//has impulse already happend
 	bool applied = false;
-	//*************
-	//COLLISIONS
-	std::vector<glm::vec3> collisions;
 	//***************
+<<<<<<< HEAD
 	bool ok = true;
+=======
+
+
+>>>>>>> parent of a983582... Bugfixes
 	/************************************/
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
@@ -122,11 +130,35 @@ int main()
 		{
 			app.doMovement(dt);
 
+<<<<<<< HEAD
 			/*
 			**	SIMULATION
 			*/
 			//loop every vertex to check for collisons
 			for (int i = 0; i < rb.getMesh().getVertices().size(); i++)
+=======
+			//****************************
+			//inertia
+			glm::mat3 ininertia = glm::mat3(rb.getRotate()) * rb.getInvInertia() * glm::mat3(glm::transpose(rb.getRotate()));
+			//**********************
+			// integration (translation)
+			rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
+			rb.setVel(rb.getVel() + dt * rb.getAcc());
+			rb.translate(rb.getVel() * dt);
+
+			//integrateion (rotation)
+			rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
+			//create skew symmetric matrix for w
+			glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
+			//create 3x3 rotation matrix from rb rotation matrix
+			glm::mat3 R = glm::mat3(rb.getRotate());
+			//update rotation matrix
+			R += dt * angVelSkew*R;
+			R = glm::orthonormalize(R);
+			rb.setRotate(glm::mat4(R));
+				
+			for (auto vertex : rb.getMesh().getVertices())
+>>>>>>> parent of a983582... Bugfixes
 			{
 				glm::vec4 worldspace = rb.getMesh().getModel() * glm::vec4(glm::vec3(rb.getMesh().getVertices()[i].getCoord()), 1.0f);
 				//is point below the plane detect the collision
@@ -136,6 +168,7 @@ int main()
 				}
 
 			}
+<<<<<<< HEAD
 			//if there was a collision
 			if (collisions.size() > 0 && ok)
 			{
@@ -175,6 +208,15 @@ int main()
 				R += dt * angVelSkew * R;
 				R = glm::orthonormalize(R);
 				rb.setRotate(R);
+=======
+
+			//**************
+			//impulse after 2s
+			if (t >= 2 && !applied)
+			{
+				applyImpulse(impulse, ipos, rb);
+				applied = true;
+>>>>>>> parent of a983582... Bugfixes
 			}
 			//*******************
 				accumulator -= dt;
