@@ -109,15 +109,13 @@ int main()
 	rb.setVel(glm::vec3(4.0f, 0.0f, 0.0f));
 	//rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.5f));
 	rb.setAngVel(glm::vec3(0.1f, 0.1f, 0.1f));
+
 	//add forces - take out for testing impulses
 	rb.addForce(gravity);
+	//coefficient of restitution
 	//rb.setCor(1.0f);
-	rb.setCor(0.6f);
-	//****************
-	
-	//*************
-	
-	//***************
+	rb.setCor(0.7f);
+
 	/************************************/
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
@@ -132,7 +130,6 @@ int main()
 		while (accumulator >= dt)
 		{
 			app.doMovement(dt);
-
 			/*
 			**	SIMULATION
 			*/
@@ -179,11 +176,6 @@ int main()
 				float impulse = (topNum / denominator);
 				//apply impulse
 				applyImpulse(rb, average, impulse, normal);
-
-				glm::vec3 friction = glm::vec3(0.99f,0.99f,0.99f);
-				rb.setVel(rb.getVel()*friction);
-				rb.setAngVel(rb.getVel()*friction);
-
 			}
 		
 			//if no collision was detected, continue as normal 
@@ -201,35 +193,31 @@ int main()
 				R = glm::orthonormalize(R);
 				rb.setRotate(R);
 
-
 				//friction, but not at all
 				/*if (t >= 4)
 				{
 					rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
 					rb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-				}*/
-			
+				}*/			
 			//*******************
 				accumulator -= dt;
 				t += dt;			
 		}
+		/******************************
 		/*
 		**	RENDER
 		*/
+
 		// clear buffer
 		app.clear();
 		// draw groud plane
 		app.draw(plane);
 		// draw Rigid Body
-		app.draw(rb.getMesh());
-		
+		app.draw(rb.getMesh());	
 		// draw objects
 		//app.draw(cube);
-
 		app.display();
 	}
-
 	app.terminate();
-
 	return EXIT_SUCCESS;
 }
