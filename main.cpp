@@ -34,22 +34,21 @@ double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
 
 //*************************
+//float impulse
 void applyImpulse( RigidBody &rb, glm::vec3 imPos, float impulse, glm::vec3 normal)
 {
-	//calculate inverse inertia with rotation
 	glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
-	//calculate change in velocity
+	//velocity change
 	glm::vec3 deltaV = (impulse / rb.getMass()) * normal;
-	//set new velociy
 	rb.setVel(rb.getVel() + deltaV);
-	//calculate vector from center of mass to impulse position
 	glm::vec3 r = imPos - rb.getPos();
-	//calaulte change in angular velocity
+	//angular velocity change
 	glm::vec3 deltaomega = impulse * inInertia * glm::cross(r, normal);
-	//set new angular velocity
+	//new angular velocity
 	rb.setAngVel(rb.getAngVel() + deltaomega);
 
 }
+//vector impulse
 void applyImpulse(RigidBody &rb, glm::vec3 imPos, glm::vec3 impulse)
 {
 	glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
@@ -57,7 +56,9 @@ void applyImpulse(RigidBody &rb, glm::vec3 imPos, glm::vec3 impulse)
 	glm::vec3 deltaV = impulse / rb.getMass();
 	rb.setVel(rb.getVel() + deltaV);
 	glm::vec3 r = imPos - rb.getPos();
+	//angular velocity change
 	glm::vec3 deltaomega = inInertia * glm::cross(r, impulse);
+	//new angular velocity
 	rb.setAngVel(rb.getAngVel() + deltaomega);
 
 }
@@ -114,7 +115,7 @@ int main()
 	rb.addForce(gravity);
 	//coefficient of restitution
 	//rb.setCor(1.0f);
-	rb.setCor(0.7f);
+	rb.setCor(0.6f);
 
 	/************************************/
 	// Game loop
@@ -155,27 +156,64 @@ int main()
 			if (collisions.size() > 0)
 			{					
 				rb.setPos(1, rb.getPos().y + lowestY);
-				glm::vec3 average;
+				glm::vec3 collisionCentre;
 
-				for (glm::vec3 collision : collisions)
+ 				for (glm::vec3 collision : collisions)
 				{
 					collision.y += lowestY;
-					average += collision;
-				}				
-				average = average / collisions.size();
+					//add all collisions
+					collisionCentre += collision;
+				}			
+				//calculate mean
+				collisionCentre = collisionCentre / collisions.size();
+				//noramal of plane
 				glm::vec3 normal(0.0f,1.0f,0.0f);
-				glm::vec3 r = average - rb.getPos();
-
-				glm::vec3 vr = (rb.getVel() + glm::cross(rb.getAngVel(), r));
+				glm::vec3 position = collisionCentre - rb.getPos();
+				//reletive velocity
+				glm::vec3 vr = (rb.getVel() + glm::cross(rb.getAngVel(), position));
+				//tangencial impulse
+				glm::vec3 vt = vr - glm::dot(vr, normal) * normal;
 
 				//top number
-				float topNum = -(1 + rb.getCor()) * glm::dot(vr, normal);
+				float topNum = (-1 + -rb.getCor()) * glm::dot(vr, normal);
 				//denominator
-				float denominator = pow(rb.getMass(), -1) + glm::dot(normal, glm::cross(inInertia * glm::cross(r, normal), r));
+				float denominator = pow(rb.getMass(), -1) + glm::dot(normal, glm::cross(inInertia * glm::cross(position, normal), position));
 				//impulse
 				float impulse = (topNum / denominator);
 				//apply impulse
-				applyImpulse(rb, average, impulse, normal);
+				applyImpulse(rb, collisionCentre, impulse, normal);
+
+				//*****FRICTION******\\
+				
+				//declare frcition impulse
+				glm::vec3 frictionimpulse;
+
+				//only use impulse if there is movement.
+				if (vt != glm::vec3(0.0f))
+				{
+					//set friction impulse
+					frictionimpulse = -0.1 * abs(impulse) * glm::normalize(vt);
+					//angular energy loss to make object stop rotating
+					rb.setAngVel(rb.getAngVel() * 0.9);
+				}
+				else
+				{
+					//set friction to 0 so that the system stops movement
+					frictionimpulse = glm::vec3(0.0f);
+				}
+				if(glm::length(rb.getVel()) < 0.2f)
+				{
+					rb.setVel(glm::vec3(0.0f));
+					rb.setAngVel(rb.getAngVel() / 1.05f);
+				}
+				if (glm::length(rb.getAngVel()) < 0.1f)
+				{
+					rb.setAngVel(glm::vec3(0.0f));
+				}
+				//friction impulse
+				applyImpulse(rb,collisionCentre,frictionimpulse);
+
+				//*****************************
 			}
 		
 			//if no collision was detected, continue as normal 
@@ -188,17 +226,10 @@ int main()
 				//intergration rotation
 				rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
 				glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
-				glm::mat3 R = glm::mat3(rb.getRotate());		
-				R += dt * angVelSkew * R;
-				R = glm::orthonormalize(R);
-				rb.setRotate(R);
-
-				//friction, but not at all
-				/*if (t >= 4)
-				{
-					rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-					rb.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-				}*/			
+				glm::mat3 rotate = glm::mat3(rb.getRotate());		
+				rotate += dt * angVelSkew * rotate;
+				rotate = glm::orthonormalize(rotate);
+				rb.setRotate(rotate);				
 			//*******************
 				accumulator -= dt;
 				t += dt;			
