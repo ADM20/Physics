@@ -62,10 +62,6 @@ void applyImpulse(RigidBody &rb, glm::vec3 imPos, glm::vec3 impulse)
 	rb.setAngVel(rb.getAngVel() + deltaomega);
 
 }
-void printVec(glm::vec3 vector)
-{
-	std::cout << vector.x << ",\t" << vector.y << ",\t" << vector.z << std::endl;
-}
 //*************
 
 // main function
