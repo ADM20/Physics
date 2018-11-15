@@ -84,7 +84,7 @@ int main()
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
-	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
+	plane.scale(glm::vec3(100.0f, 100.0f, 100.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
 	Shader pShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
@@ -107,9 +107,9 @@ int main()
 	rb.scale(glm::vec3(1.0f,3.0f,1.0f));
 	rb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	rb.setMass(2.0f);
-	rb.setVel(glm::vec3(4.0f, 0.0f, 0.0f));
+	rb.setVel(glm::vec3(5.0f, 0.0f, 0.0f));
 	//rb.setAngVel(glm::vec3(0.0f, 0.0f, 0.5f));
-	rb.setAngVel(glm::vec3(0.1f, 0.1f, 0.1f));
+	rb.setAngVel(glm::vec3(0.0f, 1.0f, 0.2f));
 
 	//add forces - take out for testing impulses
 	rb.addForce(gravity);
@@ -192,19 +192,20 @@ int main()
 				if (vt != glm::vec3(0.0f))
 				{
 					//set friction impulse
-					frictionimpulse = -0.1 * abs(impulse) * glm::normalize(vt);
+					frictionimpulse = -0.21 * abs(impulse) * glm::normalize(vt);
 					//angular energy loss to make object stop rotating
-					rb.setAngVel(rb.getAngVel() * 0.9);
+					rb.setAngVel(rb.getAngVel() * 0.95 );
 				}
 				else
 				{
 					//set friction to 0 so that the system stops movement
 					frictionimpulse = glm::vec3(0.0f);
 				}
+				//when velocity is  too low, set it to stop moving
 				if(glm::length(rb.getVel()) < 0.2f)
 				{
 					rb.setVel(glm::vec3(0.0f));
-					rb.setAngVel(rb.getAngVel() / 1.05f);
+					rb.setAngVel(rb.getAngVel() / 1.1f);
 				}
 				if (glm::length(rb.getAngVel()) < 0.1f)
 				{
