@@ -26,17 +26,16 @@
 #include "Body.h"
 #include "Force.h"
 #include "RigidBody.h"
-#include "Sphere.h"
 
 // time
 GLfloat t = 0.0f;
-GLfloat dt = 0.0166;
+GLfloat dt = 0.01f;
 double currentTime = (GLfloat)glfwGetTime();
 double accumulator = 0.0f;
 
 //*************************
 //float impulse
-void applyImpulse(RigidBody &rb, glm::vec3 imPos, float impulse, glm::vec3 normal)
+void applyImpulse( RigidBody &rb, glm::vec3 imPos, float impulse, glm::vec3 normal)
 {
 	glm::mat3 inInertia = glm::mat3(rb.getRotate()) * rb.getInertia() * glm::mat3(glm::transpose(rb.getRotate()));
 	//velocity change
@@ -80,28 +79,28 @@ int main()
 	Force* gravity = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
-	//pool table size
-	plane.scale(glm::vec3(15.0f, 1.0f, 30.0f));
-	Shader poolTable = Shader("resources/shaders/physics.vert", "resources/shaders/pool_table.frag");
-	plane.setShader(poolTable);
+	// scale it up x5
+	plane.scale(glm::vec3(100.0f, 100.0f, 100.0f));
+	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
+	plane.setShader(lambert);
 	Shader pShader = Shader("resources/shaders/physics.vert", "resources/shaders/solid_blue.frag");
 	//my transparent shader
 	Shader transparent = Shader("resources/shaders/physics.vert", "resources/shaders/physics_trans.frag");
-
+	
 	//my cube
 	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
 	cube.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	cube.setShader(transparent);
-
-	Mesh sphereMesh = Mesh::Mesh("resources/models/sphere.obj");
+	
+	Mesh pMesh = Mesh::Mesh("resources/models/sphere.obj");
 
 	//rigid body
 	RigidBody rb = RigidBody::RigidBody();
 	Mesh m = Mesh::Mesh(Mesh::MeshType::CUBE);
-	rb.setMesh(sphereMesh);
+	rb.setMesh(m);
 	rb.getMesh().setShader(lambert);
-	rb.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+	rb.scale(glm::vec3(1.0f,3.0f,1.0f));
 	rb.translate(glm::vec3(0.0f, 5.0f, 0.0f));
 	rb.setMass(2.0f);
 	rb.setVel(glm::vec3(5.0f, 0.0f, 0.0f));
@@ -151,20 +150,20 @@ int main()
 			}
 			//if there was a collision
 			if (collisions.size() > 0)
-			{
+			{					
 				rb.setPos(1, rb.getPos().y + lowestY);
 				glm::vec3 collisionCentre;
 
-				for (glm::vec3 collision : collisions)
+ 				for (glm::vec3 collision : collisions)
 				{
 					collision.y += lowestY;
 					//add all collisions
 					collisionCentre += collision;
-				}
+				}			
 				//calculate mean
 				collisionCentre = collisionCentre / collisions.size();
 				//noramal of plane
-				glm::vec3 normal(0.0f, 1.0f, 0.0f);
+				glm::vec3 normal(0.0f,1.0f,0.0f);
 				glm::vec3 position = collisionCentre - rb.getPos();
 				//reletive velocity
 				glm::vec3 vr = (rb.getVel() + glm::cross(rb.getAngVel(), position));
@@ -191,7 +190,7 @@ int main()
 					//set friction impulse
 					frictionimpulse = -0.21 * abs(impulse) * glm::normalize(vt);
 					//angular energy loss to make object stop rotating
-					rb.setAngVel(rb.getAngVel() * 0.95);
+					rb.setAngVel(rb.getAngVel() * 0.95 );
 				}
 				else
 				{
@@ -199,7 +198,7 @@ int main()
 					frictionimpulse = glm::vec3(0.0f);
 				}
 				//when velocity is  too low, set it to stop moving
-				if (glm::length(rb.getVel()) < 0.2f)
+				if(glm::length(rb.getVel()) < 0.2f)
 				{
 					rb.setVel(glm::vec3(0.0f));
 					rb.setAngVel(rb.getAngVel() / 1.1f);
@@ -209,28 +208,28 @@ int main()
 					rb.setAngVel(glm::vec3(0.0f));
 				}
 				//friction impulse
-				applyImpulse(rb, collisionCentre, frictionimpulse);
+				applyImpulse(rb,collisionCentre,frictionimpulse);
 
 				//*****************************
 			}
-
+		
 			//if no collision was detected, continue as normal 
 
 				//integration translation
-			rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
-			rb.setVel(rb.getVel() + dt * rb.getAcc());
-			rb.translate(rb.getVel() * dt);
+				rb.setAcc(rb.applyForces(rb.getPos(), rb.getVel(), t, dt));
+				rb.setVel(rb.getVel() + dt * rb.getAcc());
+				rb.translate(rb.getVel() * dt);
 
-			//intergration rotation
-			rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
-			glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
-			glm::mat3 rotate = glm::mat3(rb.getRotate());
-			rotate += dt * angVelSkew * rotate;
-			rotate = glm::orthonormalize(rotate);
-			rb.setRotate(rotate);
+				//intergration rotation
+				rb.setAngVel(rb.getAngVel() + dt * rb.getAngAcc());
+				glm::mat3 angVelSkew = glm::matrixCross3(rb.getAngVel());
+				glm::mat3 rotate = glm::mat3(rb.getRotate());		
+				rotate += dt * angVelSkew * rotate;
+				rotate = glm::orthonormalize(rotate);
+				rb.setRotate(rotate);				
 			//*******************
-			accumulator -= dt;
-			t += dt;
+				accumulator -= dt;
+				t += dt;			
 		}
 		/******************************
 		/*
@@ -242,7 +241,7 @@ int main()
 		// draw groud plane
 		app.draw(plane);
 		// draw Rigid Body
-		app.draw(rb.getMesh());
+		app.draw(rb.getMesh());	
 		// draw objects
 		//app.draw(cube);
 		app.display();
