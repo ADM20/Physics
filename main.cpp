@@ -35,8 +35,6 @@ const GLfloat deltaTime = 1.0f / 60.0f;
 GLfloat currentTime = (GLfloat)glfwGetTime();
 GLfloat accumulator = 0.0f;
 
-glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
-Gravity* fgravity = new Gravity(g);
 
 //use this to create a random number between a given min and max
 float randomGenerator(float min, float max)
@@ -53,13 +51,13 @@ int main()
 	//create application
 	Application app = Application::Application();
 	app.initRender();
-	Application::camera.setCameraPosition(glm::vec3(0.0f, 100.0f, 20.0f));
+	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 20.0f));
 
 
 	//table mesh
 	Mesh poolTable = Mesh::Mesh(Mesh::QUAD);
 	//table size x and y
-	float tableX = 1000;
+	float tableX = 30;
 	float cornerX = poolTable.getPos().x - (tableX / 2.0f);
 	float cornerZ = poolTable.getPos().z - (tableX / 2.0f);
 	//size of table
@@ -68,17 +66,18 @@ int main()
 	poolTable.setShader(lambert);
 
 	//collision grid
-	std::vector<Sphere*> cGrid[100][100];
-	float cells = 10.0f;
-	int gridSize = 100;
+	std::vector<Sphere*> cGrid[30][30];
+	float cells = 3.0f;
+	int gridSize = 3;
 
 	//ball shader
-	Shader ballShader = Shader("resources/shaders/physics.vert ", "resources/shaders/physics.frag ");
+	Shader ballShader = Shader("resources/shaders/ball.vert ", "resources/shaders/ball.frag ");
 	Mesh mesh = Mesh::Mesh("resources/models/sphere.obj");
 
 	//make an n number of balls
-	const int noBalls = 10000;
+	const int noBalls = 30;
 	Sphere* spheres[noBalls];
+	
 
 	//for every ball
 	for (int i = 0; i < noBalls; i++)
@@ -90,10 +89,10 @@ int main()
 		s->getMesh().setShader(ballShader);
 		s->setMass(1.0f);
 		//give it a random velocity between two values
-		s->setVel(glm::vec3(randomGenerator(-20, 20), 0.0f, randomGenerator(-20, 20)));
-		//s->setVel(glm::vec3(0.0f, 0.0f, 0.0f));
+		//s->setVel(glm::vec3(randomGenerator(-20, 20), 0.0f, randomGenerator(-20, 20)));
+		s->setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 		//give it a random position on the table 
-		s->setPos(glm::vec3(randomGenerator(-tableX / 2.0f, tableX / 2.0f), s->getRadius(), randomGenerator(-tableX / 2.0f, tableX / 2.0f)));
+		s->setPos(glm::vec3(-10000.0f, -10000.0f, -10000.0f));
 		//s->setPos(glm::vec3(1.3*i, s->getRadius(),1.3*i));
 		//make the temp sphere the ith ball
 		spheres[i] = s;
@@ -127,6 +126,8 @@ int main()
 				//give it a random position on the table 
 				s->setPos(glm::vec3(randomGenerator(-tableX / 2.0f, tableX / 2.0f), s->getRadius(), randomGenerator(-tableX / 2.0f, tableX / 2.0f)));
 				//s->setPos(glm::vec3(1.3*i, s->getRadius(),1.3*i));
+				s->setAngVel(glm::vec3(10.0f, 0.0f, 0.0f));
+				std::cout << s->getAngVel().x << std::endl;
 				//make the temp sphere the ith ball
 				spheres[i] = s;
 			}
@@ -149,6 +150,14 @@ int main()
 				s->setVel(s->getVel() + deltaTime * s->getAcc());
 				s->translate(s->getVel() * deltaTime);
 				//What cell/s is that ball in?
+
+				//integration rotation
+				s->setAngVel(s->getAngVel() + deltaTime * s->getAngAcc());
+				glm::mat3 angVelSkew = glm::matrixCross3(s->getAngVel());
+				glm::mat3 rotate = glm::mat3(s->getRotate());
+				rotate += deltaTime * angVelSkew * rotate;
+				rotate = glm::orthonormalize(rotate);
+				s->setRotate(rotate);
 
 				//check the x position of the circumferance of the sphere. ->0<-
 				int xPlusRad = std::floor((s->getPos().x + s->getRadius() - cornerX) / cells);
