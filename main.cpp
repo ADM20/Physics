@@ -35,6 +35,8 @@ const GLfloat deltaTime = 1.0f / 60.0f;
 GLfloat currentTime = (GLfloat)glfwGetTime();
 GLfloat accumulator = 0.0f;
 
+glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
+Gravity* fgravity = new Gravity(g);
 
 //use this to create a random number between a given min and max
 float randomGenerator(float min, float max)
@@ -67,17 +69,16 @@ int main()
 
 	//collision grid
 	std::vector<Sphere*> cGrid[30][30];
-	float cells = 3.0f;
-	int gridSize = 3;
+	float cellsDimension = 30.0f;
+	int gridDimension = 30;
 
 	//ball shader
 	Shader ballShader = Shader("resources/shaders/ball.vert ", "resources/shaders/ball.frag ");
 	Mesh mesh = Mesh::Mesh("resources/models/sphere.obj");
 
 	//make an n number of balls
-	const int noBalls = 30;
+	const int noBalls = 10;
 	Sphere* spheres[noBalls];
-	
 
 	//for every ball
 	for (int i = 0; i < noBalls; i++)
@@ -90,9 +91,9 @@ int main()
 		s->setMass(1.0f);
 		//give it a random velocity between two values
 		//s->setVel(glm::vec3(randomGenerator(-20, 20), 0.0f, randomGenerator(-20, 20)));
-		s->setVel(glm::vec3(0.0f, 0.0f, 0.0f));
+		s->setVel(glm::vec3(20.0f, 0.0f, 2.0f));
 		//give it a random position on the table 
-		s->setPos(glm::vec3(-10000.0f, -10000.0f, -10000.0f));
+		s->setPos(glm::vec3(randomGenerator(-tableX / 2.0f, tableX / 2.0f), s->getRadius(), randomGenerator(-tableX / 2.0f, tableX / 2.0f)));
 		//s->setPos(glm::vec3(1.3*i, s->getRadius(),1.3*i));
 		//make the temp sphere the ith ball
 		spheres[i] = s;
@@ -121,13 +122,11 @@ int main()
 				s->getMesh().setShader(ballShader);
 				s->setMass(1.0f);
 				//give it a random velocity between two values
-				s->setVel(glm::vec3(randomGenerator(-20, 20), 0.0f, randomGenerator(-20, 20)));
-				//s->setVel(glm::vec3(20.0f, 0.0f, 2.0f));
+				//s->setVel(glm::vec3(randomGenerator(-20, 20), 0.0f, randomGenerator(-20, 20)));
+				s->setVel(glm::vec3(20.0f, 0.0f, 2.0f));
 				//give it a random position on the table 
 				s->setPos(glm::vec3(randomGenerator(-tableX / 2.0f, tableX / 2.0f), s->getRadius(), randomGenerator(-tableX / 2.0f, tableX / 2.0f)));
 				//s->setPos(glm::vec3(1.3*i, s->getRadius(),1.3*i));
-				s->setAngVel(glm::vec3(10.0f, 0.0f, 0.0f));
-				std::cout << s->getAngVel().x << std::endl;
 				//make the temp sphere the ith ball
 				spheres[i] = s;
 			}
@@ -151,58 +150,50 @@ int main()
 				s->translate(s->getVel() * deltaTime);
 				//What cell/s is that ball in?
 
-				//integration rotation
-				s->setAngVel(s->getAngVel() + deltaTime * s->getAngAcc());
-				glm::mat3 angVelSkew = glm::matrixCross3(s->getAngVel());
-				glm::mat3 rotate = glm::mat3(s->getRotate());
-				rotate += deltaTime * angVelSkew * rotate;
-				rotate = glm::orthonormalize(rotate);
-				s->setRotate(rotate);
-
 				//check the x position of the circumferance of the sphere. ->0<-
-				int xPlusRad = std::floor((s->getPos().x + s->getRadius() - cornerX) / cells);
-				int xMinRad = std::floor((s->getPos().x - s->getRadius() - cornerX) / cells);
+				int xPlusRad = std::floor((s->getPos().x + s->getRadius() - cornerX) / cellsDimension);
+				int xMinRad = std::floor((s->getPos().x - s->getRadius() - cornerX) / cellsDimension);
 
 				//if ball would have a position off the table, put it back on the table
 				if (xPlusRad < 0)
 				{
 					xPlusRad = 0;
 				}
-				else if (xPlusRad > gridSize - 1)
+				else if (xPlusRad > gridDimension - 1)
 				{
-					xPlusRad = gridSize - 1;
+					xPlusRad = gridDimension - 1;
 				}
 				if (xMinRad < 0)
 				{
 					xMinRad = 0;
 				}
-				else if (xMinRad > gridSize - 1)
+				else if (xMinRad > gridDimension - 1)
 				{
-					xMinRad = gridSize - 1;
+					xMinRad = gridDimension - 1;
 				}
 				//An array to hold theses positions
 				int x[2] = { xPlusRad, xMinRad };
 
 				//The same but on the Z axis
-				int zPlusRad = std::floor((s->getPos().z + s->getRadius() - cornerZ) / cells);
-				int zMinRad = std::floor((s->getPos().z - s->getRadius() - cornerZ) / cells);
+				int zPlusRad = std::floor((s->getPos().z + s->getRadius() - cornerZ) / cellsDimension);
+				int zMinRad = std::floor((s->getPos().z - s->getRadius() - cornerZ) / cellsDimension);
 
 				//Same check as before except for Z
 				if (zPlusRad < 0)
 				{
 					zPlusRad = 0;
 				}
-				else if (zPlusRad > gridSize - 1)
+				else if (zPlusRad > gridDimension - 1)
 				{
-					zPlusRad = gridSize - 1;
+					zPlusRad = gridDimension - 1;
 				}
 				if (zMinRad < 0)
 				{
 					zMinRad = 0;
 				}
-				else if (zMinRad > gridSize - 1)
+				else if (zMinRad > gridDimension - 1)
 				{
-					zMinRad = gridSize - 1;
+					zMinRad = gridDimension - 1;
 				}
 				//the Z position array
 				int z[2] = { zPlusRad,zMinRad };
@@ -236,9 +227,9 @@ int main()
 			//Collisions
 
 			//For every position of my grid
-			for (int i = 0; i < gridSize; i++)
+			for (int i = 0; i < gridDimension; i++)
 			{
-				for (int j = 0; j < gridSize; j++)
+				for (int j = 0; j < gridDimension; j++)
 				{
 					//for every ball within that grid spot
 					for (Sphere* s : cGrid[i][j])
@@ -247,7 +238,7 @@ int main()
 
 						// Collision with table only if i is 0/max or j is 0/max
 						//if this is true then that ball has collided
-						if (i == 0 || i == gridSize - 1 || j == 0 || j == gridSize - 1)
+						if (i == 0 || i == gridDimension - 1 || j == 0 || j == gridDimension - 1)
 						{
 							//variables
 							bool collision = true; //there was a collision
@@ -377,4 +368,4 @@ int main()
 	app.terminate();
 
 	return EXIT_SUCCESS;
-}
+} 
